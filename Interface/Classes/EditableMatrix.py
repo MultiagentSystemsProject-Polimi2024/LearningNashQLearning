@@ -135,7 +135,7 @@ class EditableMatrix:
             the change dictionary
         '''
         if self.onValueChange is not None:
-            self.onValueChange(change)
+            self.onValueChange(self, change)
             return
 
         if self.output is not None:
@@ -226,6 +226,7 @@ class EditableMatrix:
             self.grid.children[i].children += (cellInput,)
 
         self.cols += 1
+        self.__on_value_change({'value': None})
 
     def remove_column(self):
         '''
@@ -238,6 +239,7 @@ class EditableMatrix:
             self.grid.children[i].children = self.grid.children[i].children[:-1]
 
         self.cols -= 1
+        self.__on_value_change({'value': None})
 
     def add_row(self):
         '''
@@ -250,6 +252,7 @@ class EditableMatrix:
             row.append(cellInput)
         self.grid.children += (widgets.HBox(row,),)
         self.rows += 1
+        self.__on_value_change({'value': None})
 
     def remove_row(self):
         '''
@@ -259,3 +262,4 @@ class EditableMatrix:
             return
         self.grid.children = self.grid.children[:-1]
         self.rows -= 1
+        self.__on_value_change({'value': None})
