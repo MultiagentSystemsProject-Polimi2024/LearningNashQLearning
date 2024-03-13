@@ -37,6 +37,7 @@ class EditableMatrix:
 
         self.output = output
         self.onValueChange = onValueChange
+        self.ValCellLabel = widgets.Label('Vals/Cell:')
 
     def __repr__(self) -> str:
         '''
@@ -166,6 +167,7 @@ class EditableMatrix:
         change : dict
             the change dictionary
         '''
+        self.ValCellLabel.value = f'Vals/Cell: {self.valuesPerCell}'
         if self.onValueChange is not None:
             self.onValueChange(self, change)
             return
@@ -237,8 +239,7 @@ class EditableMatrix:
                 column_buttons,
                 row_buttons,
                 self.grid,
-                widgets.Label(
-                    'Vals/Cell:'),
+                self.ValCellLabel,
                 valuesPerCell_buttons
             ],
             layout=widgets.Layout(
