@@ -1,4 +1,5 @@
 import ipywidgets as widgets
+import numpy as np
 
 
 class EditableMatrix:
@@ -25,13 +26,14 @@ class EditableMatrix:
         padding of the cell in pixels
     '''
 
-    def __init__(self, rows: int, cols: int, valuesPerCell: int = 1, data=[[]], output: widgets.Output = None, onValueChange: callable = None, cellWidth=50, padding=10) -> None:
+    def __init__(self, rows: int, cols: int, valuesPerCell: int = 1, data=[[]], output: widgets.Output = None, onValueChange: callable = None, editableShape: bool = True, cellWidth=50, padding=10) -> None:
         self.rows = rows
         self.cols = cols
         self.valuesPerCell = valuesPerCell
         self.data = data
         self.cellWidth = cellWidth
         self.padding = padding
+        self.editableShape = editableShape
 
         self.__create_grid()
 
@@ -124,6 +126,12 @@ class EditableMatrix:
 
         return [[[self[i, j, k] for k in range(self.valuesPerCell)] for j in range(self.cols)] for i in range(self.rows)]
 
+    def get_data_np(self):
+        '''
+        Returns the data in the matrix as a numpy array
+        '''
+        return np.array(self.get_data())
+
     def __valueInput(self, value=0):
         '''
         Creates a value input widget
@@ -153,7 +161,7 @@ class EditableMatrix:
             the initial value of the cell input
         '''
         cellInput = widgets.HBox([
-            self.__valueInput() for i in range(self.valuesPerCell)
+            self.__valueInput(value) for i in range(self.valuesPerCell)
         ], layout=widgets.Layout(margin=f'{self.padding}px'))
 
         return cellInput
@@ -231,7 +239,8 @@ class EditableMatrix:
         '''
         Returns the widget to display the matrix
         '''
-        row_buttons, column_buttons, valuesPerCell_buttons = self.getActionButtons()
+        row_buttons, column_buttons, valuesPerCell_buttons = self.getActionButtons(
+        ) if self.editableShape else (widgets.Label(""), )*3
 
         return widgets.GridBox(
             children=[
