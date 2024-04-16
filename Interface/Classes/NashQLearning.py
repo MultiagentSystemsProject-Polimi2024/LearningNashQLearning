@@ -22,8 +22,8 @@ class NahQLearning:
         ) 
         display(self.gamesLoadingBarNashQ)
 
-    def computeNashEq(self, state, payoff_matrix):
-        game = nash.Game(payoff_matrix[state, :, :, 0], self.reward_matrix[state, :, :, 1])
+    def computeNashEq(self, state, payoff_matrixA, payoff_matrixB):
+        game = nash.Game(payoff_matrixA[state, :, :, 0], payoff_matrixB[state, :, :, 1])
         eqs = game.vertex_enumeration()
         try:
             eq = next(eqs)
