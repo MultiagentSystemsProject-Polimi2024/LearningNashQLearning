@@ -14,6 +14,9 @@ class TransitionProfile:
     def getTransitions(self) -> tuple:
         return self.transitions.keys(), self.transitions.values()
 
+    def getProbability(self, nextGame) -> float:
+        return self.transitions.get(nextGame, 0.0)
+
     def sampleTransition(self):
         nextGames, probabilities = self.getTransitions()
         return np.random.choice(nextGames, p=probabilities)
@@ -22,11 +25,18 @@ class TransitionProfile:
         return str(self.transitions)
 
 
+class GameObserver:
+    def update(self, game) -> None:
+        pass
+
+
 class Game:
     NPlayers: int = 1
     possibleActions: np.ndarray = np.array([1])
     transitionMatrix: np.ndarray
     payoffMatrix: np.ndarray = np.array([.0])
+
+    observers: list = []
 
     def __init__(self, Nplayers, possibleActions=None) -> None:
         self.NPlayers = Nplayers
@@ -46,11 +56,21 @@ class Game:
 
         self.payoffMatrix = np.zeros(
             tuple(possibleActions) + tuple([self.NPlayers]), dtype=np.float)
+
+        self.notify()
         pass
 
     def setTransition(self, actionProfile: np.ndarray, nextGame, probaility: float) -> None:
         self.transitionMatrix[actionProfile].setTransition(
             nextGame, probaility)
+        print(self.transitionMatrix[actionProfile])
+
+        self.notify()
+        pass
+
+    def setTransitionProfile(self, actionProfile: np.ndarray, transitionProfile: TransitionProfile) -> None:
+        self.transitionMatrix[actionProfile] = transitionProfile
+        self.notify()
         pass
 
     def getTransition(self, actionProfile: np.ndarray) -> TransitionProfile:
@@ -58,13 +78,52 @@ class Game:
 
     def setPayoff(self, actionProfile: np.ndarray, payoff: np.ndarray) -> None:
         self.payoffMatrix[actionProfile] = payoff
+        self.notify()
         pass
 
     def getPayoff(self, actionProfile: np.ndarray) -> np.ndarray:
         return self.payoffMatrix[actionProfile]
 
+    def setNPlayers(self, NPlayers: int) -> None:
+        self.NPlayers = NPlayers
+
+        # trim the possible actions
+
+        self.possibleActions = [
+            self.possibleActions[i] for i in range(np.min([len(self.possibleActions), NPlayers]))
+        ] + [1] * np.max([0, NPlayers - len(self.possibleActions)])
+
+        self.transitionMatrix = np.array(
+            [TransitionProfile({}) for i in range(np.prod(self.possibleActions))]).reshape(self.possibleActions)
+
+        self.payoffMatrix = np.zeros(
+            tuple(self.possibleActions) + tuple([self.NPlayers]), dtype=np.float)
+
+        self.notify()
+        pass
+
+    def getTransitionMatrixStr(self) -> str:
+        linearized = np.reshape(self.transitionMatrix,
+                                np.prod(self.possibleActions))
+        return str([
+            str(linearized[i]) for i in range(np.prod(self.possibleActions))
+        ])
+
+    def attach(self, observer: Type[GameObserver]) -> None:
+        self.observers.append(observer)
+        pass
+
+    def detach(self, observer: Type[GameObserver]) -> None:
+        self.observers.remove(observer)
+        pass
+
+    def notify(self) -> None:
+        for observer in self.observers:
+            observer.update(self)
+        pass
+
     def __str__(self) -> str:
-        return f"Game: {self.possibleActions} \n NPlayers: {self.NPlayers} \n Transition: {self.transitionMatrix} \n Payoff: {self.payoffMatrix}"
+        return f"""Game: {self.possibleActions} \n PossibileActions:{self.possibleActions} \n NPlayers: {self.NPlayers} \n Transition: {self.getTransitionMatrixStr()} \n Payoff: {self.payoffMatrix}"""
 
 
 class Environment:
@@ -97,6 +156,9 @@ class Environment:
         self.CurrentGame = self.transitionProfile(
             actionProfile).sampleTransition()
         return reward
+
+    def getNGames(self) -> int:
+        return len(self.Games)
 
 
 if __name__ == "__main__":
