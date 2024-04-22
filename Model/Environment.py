@@ -3,8 +3,6 @@ from typing import Type, NewType
 
 
 class TransitionProfile:
-    transitions: dict = {}
-
     def __init__(self, transitions: dict) -> None:
         self.transitions = transitions
 
@@ -31,16 +29,13 @@ class GameObserver:
 
 
 class Game:
-    NPlayers: int = 1
-    possibleActions: np.ndarray = np.array([1])
-    transitionMatrix: np.ndarray = None
-    payoffMatrix: np.ndarray = None
-
-    observers: list = []
-
     def __init__(self, Nplayers, possibleActions=None) -> None:
         self.NPlayers = Nplayers
         self.transitionMatrix = None
+        self.observers = []
+        self.payoffMatrix = None
+        self.transitionMatrix = None
+        self.possibleActions = np.array([])
         # Check possible action Shape
         if (possibleActions != None):
             self.setPossibleActions(possibleActions)
@@ -143,12 +138,12 @@ class Game:
 
 
 class Environment:
-    Games: np.ndarray
-    NPlayers: int = 2
-    CurrentGame: Type[Game]
-
     def __init__(self, NGames: int = 2, NPlayers: int = 2) -> None:
-        self.Games = np.array([Game(Nplayers=NPlayers) for i in range(NGames)])
+        self.NPlayers = NPlayers
+        possibleActions = tuple([1 for _ in range(NPlayers)])
+        self.Games = np.array(
+            [Game(Nplayers=NPlayers, possibleActions=possibleActions) for i in range(NGames)])
+        self.CurrentGame = self.Games[0]
         pass
 
     def getGames(self) -> np.ndarray:
