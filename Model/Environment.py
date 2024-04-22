@@ -103,8 +103,11 @@ class Game:
             self.possibleActions[i] for i in range(np.min([len(self.possibleActions), NPlayers]))
         ] + [1] * np.max([0, NPlayers - len(self.possibleActions)])
 
+        print(self.possibleActions)
+
         self.transitionMatrix = np.array(
             [TransitionProfile({}) for i in range(np.prod(self.possibleActions))]).reshape(self.possibleActions)
+        print(self.transitionMatrix.shape)
 
         self.payoffMatrix = np.zeros(
             tuple(self.possibleActions) + tuple([self.NPlayers]), dtype=np.float)
