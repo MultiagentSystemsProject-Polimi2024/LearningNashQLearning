@@ -33,29 +33,46 @@ class GameObserver:
 class Game:
     NPlayers: int = 1
     possibleActions: np.ndarray = np.array([1])
-    transitionMatrix: np.ndarray
-    payoffMatrix: np.ndarray = np.array([.0])
+    transitionMatrix: np.ndarray = None
+    payoffMatrix: np.ndarray = None
 
     observers: list = []
 
     def __init__(self, Nplayers, possibleActions=None) -> None:
         self.NPlayers = Nplayers
+        self.transitionMatrix = None
         # Check possible action Shape
         if (possibleActions != None):
             self.setPossibleActions(possibleActions)
         pass
 
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
-        self.possibleActions = possibleActions
+        self.possibleActions = np.pad(self.possibleActions, (0, len(possibleActions) - len(self.possibleActions)),
+                                      mode='constant', constant_values=1)
 
         # Fill the transition matrix
-        profiles = [TransitionProfile({}) for i in range(
-            np.prod(possibleActions))]
+        newTransitionMatrix = np.array([TransitionProfile({}) for i in range(
+            np.prod(possibleActions))]).reshape(possibleActions)
 
-        self.transitionMatrix = np.array(profiles).reshape(possibleActions)
+        if self.transitionMatrix is not None:
+            slicingTuple = tuple([slice(0, min(
+                possibleActions[i], self.possibleActions[i]), 1) for i in range(len(possibleActions))])
 
-        self.payoffMatrix = np.zeros(
+            newTransitionMatrix[slicingTuple] = self.transitionMatrix[slicingTuple]
+
+        self.transitionMatrix = newTransitionMatrix
+
+        newPayoffMatrix = np.zeros(
             tuple(possibleActions) + tuple([self.NPlayers]), dtype=np.float)
+
+        if self.payoffMatrix is not None:
+            slicingTuple = tuple([slice(0, min(
+                possibleActions[i], self.possibleActions[i]), 1) for i in range(len(possibleActions))])
+            newPayoffMatrix[slicingTuple] = self.payoffMatrix[slicingTuple]
+
+        self.payoffMatrix = newPayoffMatrix
+
+        self.possibleActions = possibleActions
 
         self.notify()
         pass
@@ -63,7 +80,6 @@ class Game:
     def setTransition(self, actionProfile: np.ndarray, nextGame, probaility: float) -> None:
         self.transitionMatrix[actionProfile].setTransition(
             nextGame, probaility)
-        print(self.transitionMatrix[actionProfile])
 
         self.notify()
         pass
