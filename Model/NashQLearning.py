@@ -41,13 +41,22 @@ class NahQLearning:
     
     #computing Nash equilibrium for 3 players
     def computeNashEq(self, state, payoff_matrix):
-        if(self.n_players == 3):
+        if(self.n_players == 2):
+            game = pg.Game.from_arrays(payoff_matrix[state,:,:,0], payoff_matrix[state,:,:,1], title=("gambe number"+str(state)))
+            #compute the Nash Equilibrium
+            eq = pg.nash.enummixed_solve(game).equilibria
+        elif(self.n_players == 3):
             #create the game
             game = pg.Game.from_arrays(payoff_matrix[state,:,:,0], payoff_matrix[state,:,:,1], payoff_matrix[state,:,:,2], title=("gambe number"+str(state)))
+            #compute the Nash Equilibrium
+            eq = pg.nash.logit_solve(game).equilibria
         elif(self.n_players == 4):
             game = pg.Game.from_arrays(payoff_matrix[state,:,:,0], payoff_matrix[state,:,:,1], payoff_matrix[state,:,:,2], payoff_matrix[state,:,:,3], title=("gambe number"+str(state)))
-        #compute the Nash Equilibrium
-        eq = pg.nash.logit_solve(game).equilibria
+            #compute the Nash Equilibrium
+            eq = pg.nash.logit_solve(game).equilibria
+        else:
+            Exception("The number of players must be 2, 3 or 4")
+        
         #normalize the equilibrium
         eq = eq[0].normalize()
         #convert the Nash Equilibrium to an array
@@ -102,7 +111,54 @@ class NahQLearning:
         expected_payoff = np.dot(np.dot(np.dot(player1_strategy, payoff_matrix), player2_strategy), player3_strategy)
         return expected_payoff
 
+    #getting the expected payoff in the future state for n players
+    def getNextQVal(self, qTable, next_state, strategies):
+        next_qVal = np.zeros(self.n_players)
+        for x in range(self.n_players):
+            if self.n_players == 2:
+                next_qVal[x] = self.expectedPayoff(qTable[next_state, :, :, x], strategies)
+            elif self.n_players == 3:
+                next_qVal[x] = self.expectedPayoff(qTable[next_state, :, :, :, x], strategies)
+            elif self.n_players == 4:    
+                next_qVal[x] = self.expectedPayoff(qTable[next_state, :, :, :, :, x], strategies)
+            else:
+                Exception("The number of players must be 2, 3 or 4")
+        return next_qVal
+    
+    #return a copy of the qTable
+    def copyQTable(self, qTable, state, actions):
+        if self.n_players == 2:
+            return qTable[state, actions[0], actions[1]].copy()
+        elif self.n_players == 3:
+            return qTable[state, actions[0], actions[1], actions[2]].copy()
+        elif self.n_players == 4:
+            return qTable[state, actions[0], actions[1], actions[2], actions[3]].copy()
+        else:
+            Exception("The number of players must be 2, 3 or 4")
+    
+    #update QTable
+    def updateQTable(self, qTable, state, actions, alfa, gamma, r, next_qVal):
+        for x in range(self.n_players):
+            if self.n_players == 2:
+                qTable[state, actions[0], actions[1], x] = (1 - alfa) * qTable[state, actions[0], actions[1], x] + alfa * (r[x] + gamma * next_qVal[x])
+            elif self.n_players == 3:
+                qTable[state, actions[0], actions[1], actions[2], x] = (1 - alfa) * qTable[state, actions[0], actions[1], actions[2], x] + alfa * (r[x] + gamma * next_qVal[x])
+            elif self.n_players == 4:
+                qTable[state, actions[0], actions[1], actions[2], actions[3], x] = (1 - alfa) * qTable[state, actions[0], actions[1], actions[2], actions[3], x] + alfa * (r[x] + gamma * next_qVal[x])
+            else:
+                Exception("The number of players must be 2, 3 or 4")
 
+    #returns the difference between the two qTables
+    def diffQTable(self, qTable1, oldTable, state, actions):
+        if self.n_players == 2:
+            return qTable1[state, actions[0], actions[1]] - oldTable
+        elif self.n_players == 3:
+            return qTable1[state, actions[0], actions[1], actions[2]] - oldTable
+        elif self.n_players == 4:
+            return qTable1[state, actions[0], actions[1], actions[2], actions[3]] - oldTable
+        else:
+            Exception("The number of players must be 2, 3 or 4")
+    
     #NashQ learning algorithm for 2 players
     def nashQlearning(self, episodes, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset = False):
         
@@ -218,27 +274,20 @@ class NahQLearning:
 
                 #compute the expected payoff for the next state
                 next_NashEq = self.computeNashEq(next_state, qTable)
-                next_qVal = np.zeros(self.n_players)
-                for x in range(self.n_players):
-                    next_qVal[x] = self.expectedPayoff(qTable[next_state, :, :, x], next_NashEq)
+                
+                next_qVal = self.getNextQVal(qTable, next_state, next_NashEq)    
                 
                 #copy qTable
-                """attention to the number of players!!!!"""
-                """define a function to memorize this value"""
-                oldQ = qTable[state, player_action[0], player_action[1]].copy()
+                oldQ = self.copyQTable(qTable, state, player_action)
                 
                 #update qTable
-                for x in range(self.n_players):
-                    """define a function to update the qTable"""
-                    qTable[state, player1_action, player2_action, 0] = (1 - alfa) * qTable[state, player1_action, player2_action, 0] + alfa * (r[0] + gamma * next_qVal_0)
-                    qTable[state, player1_action, player2_action, 1] = (1 - alfa) * qTable[state, player1_action, player2_action, 1] + alfa * (r[1] + gamma * next_qVal_1)
+                self.updateQTable(qTable, state, player_action, alfa, gamma, r, next_qVal)
 
                 #memorize the qTable
                 history_element[('Q'+str(i))] = qTable
 
                 #memorize the difference between the old and the new value in the qTable
-                """attention to the number of players"""
-                diffs[i].append(qTable[state, player1_action, player2_action] - oldQ)
+                diffs[i].append(self.diffQTable(qTable, oldQ, state, player_action))
                 
                 #update the total reward of the player i
                 totalReward[i] += r
