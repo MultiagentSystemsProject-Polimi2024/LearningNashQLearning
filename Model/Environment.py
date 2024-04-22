@@ -34,7 +34,6 @@ class Game:
         self.transitionMatrix = None
         self.observers = []
         self.payoffMatrix = None
-        self.transitionMatrix = None
         self.possibleActions = np.array([])
         # Check possible action Shape
         if (possibleActions != None):
@@ -170,6 +169,12 @@ class Environment:
 
     def getNGames(self) -> int:
         return len(self.Games)
+
+    def setNPlayers(self, nPlayers: int = 2):
+        self.NPlayers = nPlayers
+
+        for g in self.Games:
+            g.setNPlayers(nPlayers)
 
 
 if __name__ == "__main__":
