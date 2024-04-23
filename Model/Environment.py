@@ -12,6 +12,9 @@ class TransitionProfile:
     def getTransitions(self) -> tuple:
         return self.transitions.keys(), self.transitions.values()
 
+    def getTransitionsDict(self) -> dict:
+        return self.transitions
+
     def getProbability(self, nextGame) -> float:
         return self.transitions.get(nextGame, 0.0)
 
