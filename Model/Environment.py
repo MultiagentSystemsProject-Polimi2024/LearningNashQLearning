@@ -74,6 +74,9 @@ class Game:
         self.notify()
         pass
 
+    def getPossibleActions(self) -> np.ndarray:
+        return self.possibleActions
+
     def setTransition(self, actionProfile: np.ndarray, nextGame, probaility: float) -> None:
         self.transitionMatrix[actionProfile].setTransition(
             nextGame, probaility)
@@ -142,13 +145,19 @@ class Game:
         return f"""Game: {self.possibleActions} \n PossibileActions:{self.possibleActions} \n NPlayers: {self.NPlayers} \n Transition: {self.getTransitionMatrixStr()} \n Payoff: {self.payoffMatrix}"""
 
 
+class EnvironmentObserver:
+    def updateEnv(self, environment) -> None:
+        pass
+
+
 class Environment:
     def __init__(self, NGames: int = 2, NPlayers: int = 2) -> None:
         self.NPlayers = NPlayers
         possibleActions = tuple([1 for _ in range(NPlayers)])
         self.Games = np.array(
             [Game(Nplayers=NPlayers, possibleActions=possibleActions) for i in range(NGames)])
-        self.CurrentGame = self.Games[0]
+        self.CurrentGameIndex = 0
+        self.observers = []
         pass
 
     def getGames(self) -> np.ndarray:
@@ -157,9 +166,15 @@ class Environment:
     def getGame(self, index: int) -> Type[Game]:
         return self.Games[index]
 
-    def setCurrentGame(self, game: Type[Game]) -> None:
-        self.CurrentGame = game
+    def getNGames(self) -> int:
+        return len(self.Games)
+
+    def setCurrentGame(self, gameIndex) -> None:
+        self.CurrentGameIndex = gameIndex
         pass
+
+    def getCurrentGame(self) -> Type[Game]:
+        return self.Games[self.CurrentGameIndex]
 
     def reward(self, actionProfile) -> float:
         return self.CurrentGame.getPayoff(actionProfile)
@@ -181,6 +196,32 @@ class Environment:
 
         for g in self.Games:
             g.setNPlayers(nPlayers)
+
+    def setNGames(self, nGames: int = 2, possibleActions: np.ndarray = None):
+        if possibleActions is None:
+            possibleActions = tuple([1 for _ in range(self.NPlayers)])
+        for _ in range(max(0, nGames - len(self.Games))):
+            self.Games = np.append(self.Games, Game(
+                Nplayers=self.NPlayers, possibleActions=possibleActions))
+
+        self.Games = self.Games[:nGames]
+
+        self.CurrentGameIndex = min(self.CurrentGameIndex, nGames - 1)
+
+        self.notify()
+
+    def attach(self, observer: Type[EnvironmentObserver]) -> None:
+        self.observers.append(observer)
+        pass
+
+    def detach(self, observer: Type[EnvironmentObserver]) -> None:
+        self.observers.remove(observer)
+        pass
+
+    def notify(self) -> None:
+        for observer in self.observers:
+            observer.updateEnv(self)
+        pass
 
 
 if __name__ == "__main__":
