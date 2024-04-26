@@ -44,7 +44,7 @@ class Game:
         pass
 
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
-        self.possibleActions = np.pad(self.possibleActions, (0, len(possibleActions) - len(self.possibleActions)),
+        self.possibleActions = np.pad(self.possibleActions, (0, max(0, len(possibleActions) - len(self.possibleActions))),
                                       mode='constant', constant_values=1)
 
         # Fill the transition matrix
@@ -109,11 +109,10 @@ class Game:
             self.possibleActions[i] for i in range(np.min([len(self.possibleActions), NPlayers]))
         ] + [1] * np.max([0, NPlayers - len(self.possibleActions)])
 
-        print(self.possibleActions)
+        print("Set Players Possible Actions", self.possibleActions)
 
         self.transitionMatrix = np.array(
             [TransitionProfile({}) for i in range(np.prod(self.possibleActions))]).reshape(self.possibleActions)
-        print(self.transitionMatrix.shape)
 
         self.payoffMatrix = np.zeros(
             tuple(self.possibleActions) + tuple([self.NPlayers]), dtype=np.float)
@@ -198,6 +197,7 @@ class Environment:
             g.setNPlayers(nPlayers)
 
     def setNGames(self, nGames: int = 2, possibleActions: np.ndarray = None):
+        print("Setting Games", nGames, possibleActions)
         if possibleActions is None:
             possibleActions = tuple([1 for _ in range(self.NPlayers)])
         for _ in range(max(0, nGames - len(self.Games))):
