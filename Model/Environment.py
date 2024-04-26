@@ -48,8 +48,6 @@ class Game:
         self.possibleActions = np.pad(self.possibleActions, (0, max(0, len(possibleActions) - len(self.possibleActions))),
                                       mode='constant', constant_values=1)
 
-        # Reshape the transition matrix to match the new possible actions
-
         # Create a new transition matrix based on the new possible actions
         newTransitionMatrix = np.array([TransitionProfile({}) for i in range(
             np.prod(possibleActions))]).reshape(possibleActions)
@@ -77,8 +75,6 @@ class Game:
 
         # Set the new possible actions
         self.possibleActions = possibleActions
-
-        print("Set Possible Actions", self.possibleActions)
 
         self.notify()
         pass
@@ -110,21 +106,37 @@ class Game:
         return self.payoffMatrix[actionProfile]
 
     def setNPlayers(self, NPlayers: int) -> None:
-        self.NPlayers = NPlayers
 
         # trim the possible actions
+
+        sliceTupleOld = tuple([slice(0, self.possibleActions[i], 1)
+                               for i in range(len(self.possibleActions))])
 
         self.possibleActions = [
             self.possibleActions[i] for i in range(np.min([len(self.possibleActions), NPlayers]))
         ] + [1] * np.max([0, NPlayers - len(self.possibleActions)])
 
-        print("Set Players Possible Actions", self.possibleActions)
+        sliceTupleNew = tuple([slice(0, self.possibleActions[i], 1)
+                               for i in range(NPlayers)])
 
-        self.transitionMatrix = np.array(
-            [TransitionProfile({}) for i in range(np.prod(self.possibleActions))]).reshape(self.possibleActions)
+        playerSliceTuple = tuple([slice(0, min(NPlayers, self.NPlayers), 1)])
 
-        self.payoffMatrix = np.zeros(
-            tuple(self.possibleActions) + tuple([self.NPlayers]), dtype=np.float)
+        self.NPlayers = NPlayers
+
+        newTransitionMatrix = np.array([TransitionProfile({}) for i in range(
+            np.prod(self.possibleActions))]).reshape(self.possibleActions)
+
+        newTransitionMatrix[sliceTupleNew] = self.transitionMatrix[sliceTupleOld]
+
+        self.transitionMatrix = newTransitionMatrix
+
+        newPayoffMatrix = np.zeros(
+            tuple(self.possibleActions) + tuple([NPlayers]), dtype=np.float)
+
+        newPayoffMatrix[sliceTupleNew +
+                        playerSliceTuple] = self.payoffMatrix[sliceTupleOld + playerSliceTuple]
+
+        self.payoffMatrix = newPayoffMatrix
 
         self.notify()
         pass
@@ -206,7 +218,6 @@ class Environment:
             g.setNPlayers(nPlayers)
 
     def setNGames(self, nGames: int = 2, possibleActions: np.ndarray = None):
-        print("Setting Games", nGames, possibleActions)
         if possibleActions is None:
             possibleActions = tuple([1 for _ in range(self.NPlayers)])
         for _ in range(max(0, nGames - len(self.Games))):
