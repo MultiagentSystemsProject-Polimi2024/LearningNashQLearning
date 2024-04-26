@@ -44,13 +44,17 @@ class Game:
         pass
 
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
+        # Padding the old possible actions with 1 to match the new possible actions
         self.possibleActions = np.pad(self.possibleActions, (0, max(0, len(possibleActions) - len(self.possibleActions))),
                                       mode='constant', constant_values=1)
 
-        # Fill the transition matrix
+        # Reshape the transition matrix to match the new possible actions
+
+        # Create a new transition matrix based on the new possible actions
         newTransitionMatrix = np.array([TransitionProfile({}) for i in range(
             np.prod(possibleActions))]).reshape(possibleActions)
 
+        # Copy the old transition matrix to the new transition matrix
         if self.transitionMatrix is not None:
             slicingTuple = tuple([slice(0, min(
                 possibleActions[i], self.possibleActions[i]), 1) for i in range(len(possibleActions))])
@@ -59,9 +63,11 @@ class Game:
 
         self.transitionMatrix = newTransitionMatrix
 
+        # Create a new payoff matrix based on the new possible actions
         newPayoffMatrix = np.zeros(
             tuple(possibleActions) + tuple([self.NPlayers]), dtype=np.float)
 
+        # Copy the old payoff matrix to the new payoff matrix
         if self.payoffMatrix is not None:
             slicingTuple = tuple([slice(0, min(
                 possibleActions[i], self.possibleActions[i]), 1) for i in range(len(possibleActions))])
@@ -69,7 +75,10 @@ class Game:
 
         self.payoffMatrix = newPayoffMatrix
 
+        # Set the new possible actions
         self.possibleActions = possibleActions
+
+        print("Set Possible Actions", self.possibleActions)
 
         self.notify()
         pass
