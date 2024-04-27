@@ -20,6 +20,8 @@ class TransitionProfile:
 
     def sampleTransition(self):
         nextGames, probabilities = self.getTransitions()
+        nextGames = list(nextGames)
+        probabilities = list(probabilities)
         return np.random.choice(nextGames, p=probabilities)
 
     def __str__(self) -> str:
@@ -42,7 +44,7 @@ class Game:
         if (possibleActions != None):
             self.setPossibleActions(possibleActions)
         pass
-
+    
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
         # Padding the old possible actions with 1 to match the new possible actions
         self.possibleActions = np.pad(self.possibleActions, (0, max(0, len(possibleActions) - len(self.possibleActions))),
@@ -63,7 +65,7 @@ class Game:
 
         # Create a new payoff matrix based on the new possible actions
         newPayoffMatrix = np.zeros(
-            tuple(possibleActions) + tuple([self.NPlayers]), dtype=np.float)
+            tuple(possibleActions) + tuple([self.NPlayers]), dtype=float)
 
         # Copy the old payoff matrix to the new payoff matrix
         if self.payoffMatrix is not None:
@@ -196,16 +198,22 @@ class Environment:
     def getCurrentGame(self) -> Type[Game]:
         return self.Games[self.CurrentGameIndex]
 
+    def getCurrentGameIndex(self) -> int:
+        return self.CurrentGameIndex
+    
+    def getGameIndex(self, game: Game) -> int:
+        return np.where(self.Games == game)[0][0]
+    
     def reward(self, actionProfile) -> float:
-        return self.CurrentGame.getPayoff(actionProfile)
+        return self.getCurrentGame().getPayoff(actionProfile)
 
     def transitionProfile(self, actionProfile) -> TransitionProfile:
-        return self.CurrentGame.getTransition(actionProfile)
+        return self.getCurrentGame().getTransition(actionProfile)
 
     def performAction(self, actionProfile) -> None:
         reward = self.reward(actionProfile)
-        self.CurrentGame = self.transitionProfile(
-            actionProfile).sampleTransition()
+        self.setCurrentGame(self.transitionProfile(
+            actionProfile).sampleTransition())
         return reward
 
     def getNGames(self) -> int:
@@ -242,6 +250,15 @@ class Environment:
         for observer in self.observers:
             observer.updateEnv(self)
         pass
+
+    def getNextState(self, actionProfile) -> Game:
+        return self.getGame(self.transitionProfile(
+            actionProfile).sampleTransition())
+
+    def setNextState(self, nextState: Game) -> Game:
+        old = self.CurrentGameIndex
+        self.CurrentGameIndex = np.where(self.Games == nextState)[0][0]
+        return  self.getGame(old)
 
 
 if __name__ == "__main__":
