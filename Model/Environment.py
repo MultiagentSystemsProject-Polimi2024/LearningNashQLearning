@@ -44,7 +44,7 @@ class Game:
         if (possibleActions != None):
             self.setPossibleActions(possibleActions)
         pass
-    
+
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
         # Padding the old possible actions with 1 to match the new possible actions
         self.possibleActions = np.pad(self.possibleActions, (0, max(0, len(possibleActions) - len(self.possibleActions))),
@@ -109,36 +109,40 @@ class Game:
 
     def setNPlayers(self, NPlayers: int) -> None:
 
-        # trim the possible actions
+        if (NPlayers < self.NPlayers):
+            self.possibleActions = self.possibleActions[:NPlayers]
 
-        sliceTupleOld = tuple([slice(0, self.possibleActions[i], 1)
-                               for i in range(len(self.possibleActions))])
+            slicingTuple = tuple([slice(0, self.possibleActions[i]) for i in range(
+                NPlayers)]) + tuple([0 for i in range(self.NPlayers - NPlayers)])
 
-        self.possibleActions = [
-            self.possibleActions[i] for i in range(np.min([len(self.possibleActions), NPlayers]))
-        ] + [1] * np.max([0, NPlayers - len(self.possibleActions)])
+            self.transitionMatrix = self.transitionMatrix[slicingTuple]
 
-        sliceTupleNew = tuple([slice(0, self.possibleActions[i], 1)
-                               for i in range(NPlayers)])
+            self.payoffMatrix = self.payoffMatrix[slicingTuple +
+                                                  tuple([slice(0, NPlayers)])]
 
-        playerSliceTuple = tuple([slice(0, min(NPlayers, self.NPlayers), 1)])
+        elif (NPlayers > self.NPlayers):
+            self.possibleActions = np.pad(
+                self.possibleActions, (0, NPlayers - self.NPlayers), 'constant', constant_values=1)
+
+            slicingTuple = tuple([slice(0, self.possibleActions[i]) for i in range(
+                self.NPlayers)]) + tuple([0 for i in range(NPlayers - self.NPlayers)])
+
+            newTransitionMatrix = np.array([TransitionProfile({}) for _ in range(
+                np.prod(self.possibleActions))]).reshape(self.possibleActions)
+
+            newTransitionMatrix[slicingTuple] = self.transitionMatrix
+
+            self.transitionMatrix = newTransitionMatrix
+
+            newPayoffMatrix = np.zeros(
+                tuple(self.possibleActions) + tuple([NPlayers]))
+
+            newPayoffMatrix[slicingTuple +
+                            tuple([slice(0, self.NPlayers)])] = self.payoffMatrix
+
+            self.payoffMatrix = newPayoffMatrix
 
         self.NPlayers = NPlayers
-
-        newTransitionMatrix = np.array([TransitionProfile({}) for i in range(
-            np.prod(self.possibleActions))]).reshape(self.possibleActions)
-
-        newTransitionMatrix[sliceTupleNew] = self.transitionMatrix[sliceTupleOld]
-
-        self.transitionMatrix = newTransitionMatrix
-
-        newPayoffMatrix = np.zeros(
-            tuple(self.possibleActions) + tuple([NPlayers]), dtype=np.float)
-
-        newPayoffMatrix[sliceTupleNew +
-                        playerSliceTuple] = self.payoffMatrix[sliceTupleOld + playerSliceTuple]
-
-        self.payoffMatrix = newPayoffMatrix
 
         self.notify()
         pass
@@ -200,10 +204,10 @@ class Environment:
 
     def getCurrentGameIndex(self) -> int:
         return self.CurrentGameIndex
-    
+
     def getGameIndex(self, game: Game) -> int:
         return np.where(self.Games == game)[0][0]
-    
+
     def reward(self, actionProfile) -> float:
         return self.getCurrentGame().getPayoff(actionProfile)
 
@@ -258,7 +262,7 @@ class Environment:
     def setNextState(self, nextState: Game) -> Game:
         old = self.CurrentGameIndex
         self.CurrentGameIndex = np.where(self.Games == nextState)[0][0]
-        return  self.getGame(old)
+        return self.getGame(old)
 
 
 if __name__ == "__main__":
