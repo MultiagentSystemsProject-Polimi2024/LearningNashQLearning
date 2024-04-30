@@ -59,19 +59,20 @@ class Agent:
         self.currentAction = np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()), p=self.currentStrategy) if np.random.rand() > epsilon else np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()))
 
 class NashQLearning:
-    def __init__(self, environment: Environment, goal_state = None, startingState = None) -> None:
+    def __init__(self, environment: Environment):
         
         self.env  = environment
-        self.agents = [Agent(i, environment) for i in range(environment.NPlayers)]
-        
-        self.goal_state = goal_state 
-        
-        self.__already_seen_equilibria = {}
 
         self.episodes = 1
 
-        if startingState != None:
-            self.startingState = startingState
+        self.epsilon = 0.1
+        self.alfa = 0.5
+        self.gamma = 0.9
+        self.decaying_epsilon = 1000
+        self.pure_training_ep = 1000
+        self.goal_state = None
+        self.startingState = self.env.getCurrentGame()
+        self.reset = False
 
         #decide strategy for nash equilibria computation
         if environment.NPlayers == 2:
@@ -86,7 +87,85 @@ class NashQLearning:
         else:
             Exception("The number of players must be 2, 3 or 4")
        
-        #widget
+        #widgets
+
+        self.resetWidget = widgets.Checkbox(
+        value=False,
+        description='Reset on goal state',
+        disabled=False,
+        indent=False
+        )
+
+        self.resetWidget.observe(self.setReset, names='value')
+
+        self.pureTrainingEpWidget = widgets.IntText(
+        value=1000,
+        description='Pure training episodes:',
+        disabled=False
+        )
+
+        self.pureTrainingEpWidget.observe(self.setPureTrainingEp, names='value')
+
+        self.decayingEpsilonWidget = widgets.IntText(
+        value=1000,
+        description='Decaying epsilon episodes:',
+        disabled=False
+        )
+
+        self.decayingEpsilonWidget.observe(self.setDecayingEpsilon, names='value')
+
+        self.gammaWidget = widgets.FloatText(
+        value=0.9,
+        description='Gamma:',
+        disabled=False
+        )
+
+        self.gammaWidget.observe(self.setGamma, names='value')
+
+        self.alfaWidget = widgets.FloatText(
+        value=0.5,
+        description='Alfa:',
+        disabled=False
+        )
+
+        self.alfaWidget.observe(self.setAlfa, names='value')
+
+        self.epsilonWidget = widgets.FloatText(
+        value=0.1,
+        description='Epsilon:',
+        disabled=False
+        )
+
+        self.epsilonWidget.observe(self.setEpsilon, names='value')
+
+        self.episodesWidget = widgets.IntText(
+        value=1,
+        description='Episodes:',
+        disabled=False
+        )
+
+        self.episodesWidget.observe(self.setEpisodes, names='value')
+
+        self.goalStateWidget = widgets.Dropdown(
+        options=[(str(i), i) for i in range(len(self.env.getGames()))],
+        value=0,
+        description='Goal state:',
+        disabled=False,
+        )
+
+        self.goalStateWidget.observe(self.setGoalState, names='value')
+
+        self.startingStateWidget = widgets.Dropdown(
+        options=[(str(i), i) for i in range(len(self.env.getGames()))],
+        value=0,
+        description='Starting state:',
+        disabled=False,
+        )
+
+        self.startingStateWidget.observe(self.setStartingState, names='value')
+
+        self.vboxA = widgets.VBox([self.episodesWidget, self.epsilonWidget, self.alfaWidget, self.gammaWidget, self.decayingEpsilonWidget, self.pureTrainingEpWidget, self.resetWidget, self.goalStateWidget, self.startingStateWidget])
+
         self.gamesLoadingBarNashQ = widgets.IntProgress(
         value=0,
         min=0,
@@ -95,18 +174,37 @@ class NashQLearning:
         description='Games:',
         bar_style='info',
         ) 
-        display(self.gamesLoadingBarNashQ)
 
+        self.startButton = widgets.Button(description="Start")
+        self.startButton.on_click(self.start)
+
+        self.vboxB = widgets.VBox([self.startButton, self.gamesLoadingBarNashQ])
+
+        self.vbox = widgets.VBox([self.vboxA, self.vboxB])
+       
     #NashQ learning algorithm for n players
-    def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset = False):
-        n_players = self.env.NPlayers
+    def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset = False, goal_state = None, startingState = None):
         
+        #initialize class variables
+        n_players = self.env.NPlayers
+
+        self.agents = [Agent(i, self.env) for i in range(n_players)]
+        
+        self.goal_state = goal_state 
+        
+        self.__already_seen_equilibria = {}
+
+        if startingState != None:
+            self.startingState = startingState
+            self.env.setCurrentGame(self.env.getGameIndex(startingState))
+        else:
+            self.startingState = self.env.getCurrentGame()
         
         #initialize values to display
-        totalReward = [np.zeros(n_players) for _ in range(n_players)]
-        diffs = [[]for _ in range(n_players)]
-        NashQRewards = [[]for _ in range(n_players)]
-        history = History()
+        self.totalReward = [np.zeros(n_players) for _ in range(n_players)]
+        self.diffs = [[]for _ in range(n_players)]
+        self.NashQRewards = [[]for _ in range(n_players)]
+        self.history = History()
 
         for t in range(self.episodes):
             history_element = History()        
@@ -143,18 +241,18 @@ class NashQLearning:
                 history_element.add(('Q'+str(agent.number)), agent.QtableForHistory())#.copy())
                 
                 #memorize the difference between the old and the new value in the qTable
-                diffs[agent.number].append(self.diffQTable(agent.getQtable(currentState), oldQ, actionProfile))
+                self.diffs[agent.number].append(self.diffQTable(agent.getQtable(currentState), oldQ, actionProfile))
                 
                 #update the total reward of the player i
-                totalReward[agent.number] += r
+                self.totalReward[agent.number] += r
                 #memorize the reward of the player i
-                NashQRewards[agent.number].append(r)
+                self.NashQRewards[agent.number].append(r)
             
 
             #memorize the state
             history_element.add('current_state', currentState)
             #add the history element to the history
-            history.add(t+1, history_element)
+            self.history.add(t+1, history_element)
 
             #update the state
             if(reset and self.goal_state != None and currentState==self.goal_state):
@@ -164,12 +262,12 @@ class NashQLearning:
 
             #update the loading bar
             self.gamesLoadingBarNashQ.value += 1
-        return totalReward, diffs, NashQRewards, history
+        return self.totalReward, self.diffs, self.NashQRewards, self.history
             
     #setter for the number of players
     def setEpisodes(self, episodes):
-        self.episodes = episodes
-        self.gamesLoadingBarNashQ.max = episodes-1
+        self.episodes = episodes["new"]
+        self.gamesLoadingBarNashQ.max = self.episodes-1
 
     def playMove(self, nextState: Game)->None:
         self.env.setNextState(nextState)
@@ -340,3 +438,35 @@ class NashQLearning:
         if self.env.NPlayers > 4:
             raise Exception("The number of players must be 2, 3 or 4")
         return newTable[tuple(actions)] - oldTable
+    
+    #start the NashQ learning algorithm on button click
+    def start(self, b):
+        self.nashQlearning(self.alfa, self.gamma, self.epsilon, self.pure_training_ep, self.decaying_epsilon, self.reset, self.goal_state, self.startingState)
+
+    def setEpsilon(self, epsilon: float):
+        self.epsilon = epsilon["new"]
+    
+    def setAlfa(self, alfa: float):
+        self.alfa = alfa["new"]
+    
+    def setGamma(self, gamma: float):
+        self.gamma = gamma["new"]
+    
+    def setDecayingEpsilon(self, decaying_epsilon: int):
+        self.decaying_epsilon = decaying_epsilon["new"]
+    
+    def setPureTrainingEp(self, pure_training_ep: int):
+        self.pure_training_ep = pure_training_ep["new"]
+    
+    def setReset(self, reset: bool):
+        self.reset = reset["new"]
+
+    def setGoalState(self, index: int):
+        self.goal_state = self.env.getGame(index["new"])
+
+    def setStartingState(self, index: int):
+        self.startingState = self.env.getGame(index["new"])
+
+    #returns the widgets
+    def getWidget(self):
+        return self.vbox
