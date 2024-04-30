@@ -3,7 +3,7 @@ from netgraph import Graph
 import matplotlib.pyplot as plt
 
 class PlotGraph:
-    def __init__(self, graph, edge_labels=None, node_colors=None, ax):
+    def __init__(self, graph, ax, edge_labels=None, node_colors=None):
         self.graph = graph
         self.ax = ax
         self.edge_labels = {}
