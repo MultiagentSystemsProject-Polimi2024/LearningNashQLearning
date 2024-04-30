@@ -1,54 +1,112 @@
 import numpy as np
 import networkx as nx
 from time import sleep
-from threading import Thread
+from threading import Thread, Condition, Lock
 import matplotlib.pyplot as plt
-import GraphPlotter
 from ipywidgets import widgets
+import logging
+import sys
+sys.path.append('../../')
 
-class EnvGraphDisplay:
-    def __init__(self, ax):
-        self.graph = nx.DiGraph
-        self.ax = ax
+if True:
+    from Interface.Classes.GraphPlotter import PlotGraph
+    from Model.Environment import Environment, EnvironmentObserver, Game, TransitionProfile
+
+
+class CounterThread(Thread):
+    def __init__(self, envGraphDisplay):
+        Thread.__init__(self)
+        self.envGraphDisplay = envGraphDisplay
+
+    def run(self):
+        while True:
+            with self.envGraphDisplay.timerCondition:
+                self.envGraphDisplay.timerCondition.wait()
+                while self.envGraphDisplay.timer > 0:
+                    sleep(1)
+                    self.envGraphDisplay.timer -= 1
+                self.envGraphDisplay.update_graph()
+
+
+class EnvGraphDisplay(EnvironmentObserver):
+    def __init__(self, env: Environment, timeBuffer=3):
+        self.env = env
+        env.attach(self)
+        self.graph = nx.DiGraph()
         self.edge_labels = {}
         self.node_colors = {}
         self.taskStack = []
-        self.bufferTimer = Thread(target=self.__countdown)
-        self.bufferTimer.start()
+
+        self.timeBuffer = timeBuffer
+        self.timer = timeBuffer
+        self.resetTimer()
+        self.timerLock = Lock()
+        self.timerCondition = Condition(self.timerLock)
+
+        self.timerThread = CounterThread(self)
+        self.timerThread.start()
 
         self.out = widgets.Output()
-        with self.out:
-            fig, ax = plt.subplots()
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-            plt.show()
-    
-    def update(self, env):
-        self.taskStack.append((self.__update_graph, env))
-    
-    def __countdown(self):
-        sleep(2)
-        self.__execute_tasks()
-    
+
+        # with self.out:
+        fig, self.ax = plt.subplots()
+        self.ax.get_xaxis().set_visible(False)
+        self.ax.get_yaxis().set_visible(False)
+
+        self.updateEnv(env)
+
+    def resetTimer(self):
+        self.timer = self.timeBuffer
+
+    def updateEnv(self, env: Environment):
+
+        if (not self.timerLock.locked()):
+            with self.timerCondition:
+                self.timerCondition.notify()
+
+        self.resetTimer()
+
+    def countdown(self):
+        while True:
+            sleep(2)
+            self.__execute_tasks()
+
     def __execute_tasks(self):
+        if (len(self.taskStack) == 0):
+            return
+
         task = self.taskStack.pop()
         self.taskStack.clear()
-        executor = Thread(target=task[0], args=task[1])
+        executor = Thread(target=task[0], args=[task[1]])
+        executor.start()
 
-    def __update_graph(self, env):
-        for game in env.games:
-            for action in game.getPossibleActions:
-                transition = game.getTransition(action)
-                nextGame = transition[0]
-                self.graph.add_edge(game, nextGame)
-                if self.edge_labels.get((game, nextGame)) is None:
-                    self.edge_labels[(game, nextGame)] = str(action) + ': ' + str(transition[1])
-                else:
-                    self.edge_labels[(game, nextGame)] += '\n' + str(action) + ': ' + str(transition[1])
-        for node in self.graph.nodes:
+    def update_graph(self):
+        for game in self.env.getGames():
+            self.graph.add_node(game)
+
+            # find all non empty indexes
+            actionProfiles = game.getAllActionProfiles()
+
+            for action in actionProfiles:
+                games, probs = game.getTransition(
+                    tuple(action)).getTransitions()
+
+                for g, p in zip(games, probs):
+                    self.graph.add_edge(game, g)
+                    if self.edge_labels.get((game, g)) is None:
+                        self.edge_labels[(game, g)] = str(
+                            action) + ': ' + str(p)
+                    else:
+                        self.edge_labels[(game, g)] += '\n' + \
+                            str(action) + ': ' + str(p)
+
+        for node in list(self.graph.nodes):
             self.node_colors[node] = 'b'
-        with self.out:
-            GraphPlotter.PlotGraph(self.graph, self.edge_labels, self.node_colors, self.ax).plot()
-    
+
+        print(self.node_colors)
+
+        PlotGraph(
+            self.graph, self.ax, self.edge_labels, self.node_colors).plot(self.out)
+
     def get_widget(self):
         return self.out

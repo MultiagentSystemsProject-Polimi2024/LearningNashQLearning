@@ -24,6 +24,9 @@ class TransitionProfile:
         probabilities = list(probabilities)
         return np.random.choice(nextGames, p=probabilities)
 
+    def isEmpty(self) -> bool:
+        return len(self.transitions) == 0
+
     def __str__(self) -> str:
         return str(self.transitions)
 
@@ -44,6 +47,9 @@ class Game:
         if (possibleActions != None):
             self.setPossibleActions(possibleActions)
         pass
+
+    def getAllActionProfiles(self) -> np.ndarray:
+        return np.array(np.meshgrid(*[range(i) for i in self.possibleActions])).T.reshape(-1, self.NPlayers)
 
     def setPossibleActions(self, possibleActions: np.ndarray) -> None:
         # Padding the old possible actions with 1 to match the new possible actions
@@ -154,6 +160,9 @@ class Game:
             str(linearized[i]) for i in range(np.prod(self.possibleActions))
         ])
 
+    def getTransitionMatrix(self) -> np.ndarray:
+        return self.transitionMatrix
+
     def attach(self, observer: Type[GameObserver]) -> None:
         self.observers.append(observer)
         pass
@@ -176,12 +185,14 @@ class EnvironmentObserver:
         pass
 
 
-class Environment:
+class Environment(GameObserver):
     def __init__(self, NGames: int = 2, NPlayers: int = 2) -> None:
         self.NPlayers = NPlayers
         possibleActions = tuple([1 for _ in range(NPlayers)])
         self.Games = np.array(
             [Game(Nplayers=NPlayers, possibleActions=possibleActions) for i in range(NGames)])
+        for g in self.Games:
+            g.attach(self)
         self.CurrentGameIndex = 0
         self.observers = []
         pass
@@ -228,19 +239,26 @@ class Environment:
 
         for g in self.Games:
             g.setNPlayers(nPlayers)
+        self.notify()
 
     def setNGames(self, nGames: int = 2, possibleActions: np.ndarray = None):
         if possibleActions is None:
             possibleActions = tuple([1 for _ in range(self.NPlayers)])
         for _ in range(max(0, nGames - len(self.Games))):
-            self.Games = np.append(self.Games, Game(
-                Nplayers=self.NPlayers, possibleActions=possibleActions))
+            newGame = Game(Nplayers=self.NPlayers,
+                           possibleActions=possibleActions)
+            newGame.attach(self)
+            self.Games = np.append(self.Games, newGame)
 
         self.Games = self.Games[:nGames]
 
         self.CurrentGameIndex = min(self.CurrentGameIndex, nGames - 1)
 
         self.notify()
+
+    def update(self, game: Game) -> None:
+        self.notify()
+        pass
 
     def attach(self, observer: Type[EnvironmentObserver]) -> None:
         self.observers.append(observer)
