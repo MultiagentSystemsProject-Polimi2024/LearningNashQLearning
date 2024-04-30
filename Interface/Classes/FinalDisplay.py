@@ -8,8 +8,6 @@ import GraphPlotter
 from time import sleep
 from threading import Thread
 
-%matplotlib widget
-
 class FinalDisplay:
 
     def __init__(self):
@@ -33,20 +31,21 @@ class FinalDisplay:
         self.slider = widgets.IntSlider(value=0, min=0, max=0, step=1, description='Game num:', continuous_update=False, readout=True, readout_format='d')
         self.slider.observe(self.__on_value_change, names='value')
         self.output_widget = widgets.Output()
-        widgets.display(self.out, self.slider, self.output_widget)
+        self.box = widgets.VBox([self.out, self.slider, self.output_widget])
 
         # create figure and axes
-        self.fig, self.axs = plt.subplots(4, 1, figsize=(8, 15), gridspec_kw={'height_ratios': [2, 1, 1, 1]})
-        self.axs[0].get_xaxis().set_visible(False)
-        self.axs[0].get_yaxis().set_visible(False)
-        self.axs[1].get_xaxis().set_visible(True)
-        self.axs[1].get_yaxis().set_visible(True)
-        self.axs[1].set_xlim(0, 1000)
-        self.fig.tight_layout(h_pad=4)
-        plt.show()
+        with self.out:
+            self.fig, self.axs = plt.subplots(4, 1, figsize=(8, 15), gridspec_kw={'height_ratios': [2, 1, 1, 1]})
+            self.axs[0].get_xaxis().set_visible(False)
+            self.axs[0].get_yaxis().set_visible(False)
+            self.axs[1].get_xaxis().set_visible(True)
+            self.axs[1].get_yaxis().set_visible(True)
+            self.axs[1].set_xlim(0, 1000)
+            self.fig.tight_layout(h_pad=4)
+            plt.show()
 
     def __countdown(self):
-        sleep(5)
+        sleep(2)
         self.__execute_tasks()
 
     def __execute_tasks(self):
@@ -64,14 +63,15 @@ class FinalDisplay:
         sns.set_theme(style="whitegrid")
         rewards_players, rewards_sum = self.__smooth_rewards(rewards)
         i = 0
-        for player in rewards_players:
-            self.axs[1].plot(player, label='Player' + str(i))
-            i += 1
-        self.axs[1].plot(rewards_sum, label='Sum')
-        self.axs[1].set_title('Rewards')
-        self.axs[1].set_xlabel('Episodes')
-        self.axs[1].set_ylabel('Rewards')
-        self.axs[1].legend()
+        with self.out:
+            for player in rewards_players:
+                self.axs[1].plot(player, label='Player' + str(i))
+                i += 1
+            self.axs[1].plot(rewards_sum, label='Sum')
+            self.axs[1].set_title('Rewards')
+            self.axs[1].set_xlabel('Episodes')
+            self.axs[1].set_ylabel('Rewards')
+            self.axs[1].legend()
     
     def __smooth_rewards(self, rewards, window=100):
         rewardsPlayersSmooth = []
@@ -90,7 +90,8 @@ class FinalDisplay:
                 self.node_colors[state] = 'r'
             else:
                 self.node_colors[state] = 'b'
-        GraphPlotter.PlotGraph(self.graph, self.edge_labels, self.node_colors, self.axs[0]).plot()
+        with self.out:
+            GraphPlotter.PlotGraph(self.graph, self.edge_labels, self.node_colors, self.axs[0]).plot()
 
     def __on_value_change(self, change):
         # print vertical red line in all subplots at the selected game number
@@ -104,11 +105,14 @@ class FinalDisplay:
                 line = ax.axvline(x=change['new'], color='r', linestyle='--')
                 self.old_line.append(line)
                 ax.plot()
-        self.__plot_graph(change['new'])
+            self.__plot_graph(change['new'])
         with self.output_widget:
             self.output_widget.clear_output(True)
-            for key in self.history[change['new']].keys():
+            for key in self.history[change['new']]['Qtables'].keys():
                 print("Q-tables player" + key + ":\n")
-                for q in self.history[change['new']][key]:
+                for q in self.history[change['new']]['Qtables'][key]:
                     print(q)
                     print("\n")
+
+    def get_widget(self):
+        return self.box
