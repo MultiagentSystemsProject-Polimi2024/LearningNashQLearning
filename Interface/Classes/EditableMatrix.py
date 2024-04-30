@@ -166,6 +166,7 @@ class EditableMatrix:
 
         return cellInput
 
+
     def __on_value_change(self, change):
         '''
         Function to be called when a cell value changes
