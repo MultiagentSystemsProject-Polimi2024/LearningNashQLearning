@@ -169,7 +169,7 @@ class NashQLearning:
         self.gamesLoadingBarNashQ = widgets.IntProgress(
         value=0,
         min=0,
-        max=self.episodes-1,
+        max=1,
         step=1,
         description='Games:',
         bar_style='info',
@@ -184,7 +184,9 @@ class NashQLearning:
        
     #NashQ learning algorithm for n players
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset = False, goal_state = None, startingState = None):
-        
+        #reset the values of the loading bar
+        self.gamesLoadingBarNashQ.value = 0
+
         #initialize class variables
         n_players = self.env.NPlayers
 
