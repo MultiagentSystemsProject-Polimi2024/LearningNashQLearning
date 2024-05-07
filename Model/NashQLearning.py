@@ -118,6 +118,8 @@ class NashQLearning:
         value=0.9,
         description='Gamma:',
         disabled=False
+        min = 0,
+        max = 1
         )
 
         self.gammaWidget.observe(self.setGamma, names='value')
@@ -126,6 +128,8 @@ class NashQLearning:
         value=0.5,
         description='Alfa:',
         disabled=False
+        min = 0,
+        max = 1
         )
 
         self.alfaWidget.observe(self.setAlfa, names='value')
@@ -134,6 +138,8 @@ class NashQLearning:
         value=0.1,
         description='Epsilon:',
         disabled=False
+        min = 0,
+        max = 1
         )
 
         self.epsilonWidget.observe(self.setEpsilon, names='value')
@@ -142,6 +148,7 @@ class NashQLearning:
         value=1,
         description='Episodes:',
         disabled=False
+        min = 1
         )
 
         self.episodesWidget.observe(self.setEpisodes, names='value')
