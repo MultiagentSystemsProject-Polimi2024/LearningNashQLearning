@@ -51,7 +51,7 @@ class EnvGraphDisplay(EnvironmentObserver):
             fig, self.ax = plt.subplots()
             self.ax.get_xaxis().set_visible(False)
             self.ax.get_yaxis().set_visible(False)
-        
+
         self.updateEnv(env)
 
     def resetTimer(self):
@@ -96,7 +96,11 @@ class EnvGraphDisplay(EnvironmentObserver):
         print(self.graph)
 
         self.ax.clear()
-        PlotGraph(self.graph, self.ax, self.edge_labels, self.node_colors).plot(self.out)
+        PlotGraph(self.graph, self.ax, self.edge_labels,
+                  self.node_colors).plot(self.out)
 
     def get_widget(self):
         return self.out
+
+    def getGraph(self):
+        return self.graph, self.edge_labels
