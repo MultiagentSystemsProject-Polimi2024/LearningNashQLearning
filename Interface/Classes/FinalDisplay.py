@@ -6,11 +6,32 @@ import networkx as nx
 from netgraph import Graph
 import GraphPlotter
 from time import sleep
-from threading import Thread
+from threading import Thread, Condition, Lock
+import sys
+sys.path.append('../../')
+
+if True:
+    from Interface.Classes.GraphPlotter import PlotGraph
+    from Model.Environment import Environment, EnvironmentObserver, Game, TransitionProfile
+
+
+class CounterThread(Thread):
+    def __init__(self, finalDisplay):
+        Thread.__init__(self)
+        self.finalDisplay = finalDisplay
+
+    def run(self):
+        while True:
+            with self.finalDisplay.timerCondition:
+                self.finalDisplay.timerCondition.wait()
+                while self.finalDisplay.timer > 0:
+                    sleep(1)
+                    self.finalDisplay.timer -= 1
+                self.finalDisplay.update()
 
 class FinalDisplay:
 
-    def __init__(self):
+    def __init__(self, history, timebuffer=3):
         self.graph = nx.DiGraph()
         self.edge_labels = {}
         self.node_colors = {}
@@ -19,12 +40,16 @@ class FinalDisplay:
         self.gameNum = 0
         self.q_tables = {}
         self.axs = []
-        self.history = []
+        self.history = history
 
-        # executor thread
-        self.taskStack = []
-        self.bufferTimer = Thread(target=self.__countdown)
-        self.bufferTimer.start()
+        self.timeBuffer = timeBuffer
+        self.timer = timeBuffer
+        self.resetTimer()
+        self.timerLock = Lock()
+        self.timerCondition = Condition(self.timerLock)
+
+        self.timerThread = CounterThread(self)
+        self.timerThread.start()
 
         # create output widgets
         self.out = widgets.Output()
@@ -44,22 +69,16 @@ class FinalDisplay:
             self.fig.tight_layout(h_pad=4)
             plt.show()
 
-    def __countdown(self):
-        sleep(2)
-        self.__execute_tasks()
-
-    def __execute_tasks(self):
-        tasks = self.taskStack.pop()
-        self.taskStack.clear()
-        for task in tasks:
-            executor = Thread(target=task[0], args=task[1])
+    def resetTimer(self):
+        self.timer = self.timeBuffer
     
     def update(self, gamesHistory, rewards):
         self.history = gamesHistory
-        self.taskStack.append([(self.__plot_graph, self.gameNum), (self.__plot_rewards, rewards)])
+        self.__plot_graph(self.gameNum)
+        self.__plot_rewards(rewards)
     
     def __plot_rewards(self, rewards):
-        self.slider.max = len(self.history) - 1
+        self.slider.max = len(self.history.getHistory()) - 1
         sns.set_theme(style="whitegrid")
         rewards_players, rewards_sum = self.__smooth_rewards(rewards)
         i = 0
@@ -84,7 +103,7 @@ class FinalDisplay:
         return rewardsPlayersSmooth, rewardsSumSmooth
     
     def __plot_graph(self, game_num):
-        current_state = self.history[game_num]['current_state']
+        current_state = self.history.get(game_num)['current_state']
         for state in self.node_colors:
             if state == current_state:
                 self.node_colors[state] = 'r'
@@ -108,9 +127,9 @@ class FinalDisplay:
             self.__plot_graph(change['new'])
         with self.output_widget:
             self.output_widget.clear_output(True)
-            for key in self.history[change['new']]['Qtables'].keys():
+            for key in self.history.get(change['new'])['Qtables'].keys():
                 print("Q-tables player" + key + ":\n")
-                for q in self.history[change['new']]['Qtables'][key]:
+                for q in self.history.get(change['new'])['Qtables'][key]:
                     print(q)
                     print("\n")
 
