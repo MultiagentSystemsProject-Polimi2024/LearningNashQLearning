@@ -184,6 +184,9 @@ class EnvironmentObserver:
     def updateEnv(self, environment) -> None:
         pass
 
+class GamesNObserver:
+    def updateGames(self) -> None:
+        pass
 
 class Environment(GameObserver):
     def __init__(self, NGames: int = 2, NPlayers: int = 2) -> None:
@@ -195,6 +198,7 @@ class Environment(GameObserver):
             g.attach(self)
         self.CurrentGameIndex = 0
         self.observers = []
+        self.gameObservers = []
         pass
 
     def getGames(self) -> np.ndarray:
@@ -255,9 +259,14 @@ class Environment(GameObserver):
         self.CurrentGameIndex = min(self.CurrentGameIndex, nGames - 1)
 
         self.notify()
+        self.notifyGames()
 
     def update(self, game: Game) -> None:
         self.notify()
+        pass
+    
+    def attachGameObserver(self, observer: Type[GamesNObserver]) -> None:
+        self.gameObservers.append(observer)
         pass
 
     def attach(self, observer: Type[EnvironmentObserver]) -> None:
@@ -271,6 +280,11 @@ class Environment(GameObserver):
     def notify(self) -> None:
         for observer in self.observers:
             observer.updateEnv(self)
+        pass
+
+    def notifyGames(self) -> None:
+        for observer in self.gameObservers:
+            observer.updateGames()
         pass
 
     def getNextState(self, actionProfile) -> Game:
