@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
-import seaborn as sns
 import numpy as np
 import networkx as nx
 from netgraph import Graph
@@ -10,48 +9,22 @@ import sys
 sys.path.append('../../')
 
 if True:
-    from Interface.Classes.GraphPlotter import PlotGraph
-    from Model.Environment import Environment, EnvironmentObserver, Game, TransitionProfile
+    import Interface.Classes.GraphClass as graphClass
+    from Model.NashQLearning import NashQLearning, NashQLearningObserver
+    from Model.Environment import Environment
+    from Model.History import History
     from Interface.Classes.EnvGraphDisplay import EnvGraphDisplay
 
+class FinalDisplay(NashQLearningObserver):
 
-class CounterThread(Thread):
-    def __init__(self, finalDisplay):
-        Thread.__init__(self)
-        self.finalDisplay = finalDisplay
-
-    def run(self):
-        while True:
-            with self.finalDisplay.timerCondition:
-                self.finalDisplay.timerCondition.wait()
-                while self.finalDisplay.timer > 0:
-                    sleep(1)
-                    self.finalDisplay.timer -= 1
-                self.finalDisplay.update()
-
-
-class FinalDisplay:
-
-    def __init__(self, history, env: Environment, timebuffer=3):
+    def __init__(self, nashQ: NashQLearning, env: Environment):
         self.env = env
-        self.graph = nx.DiGraph()
-        self.edge_labels = {}
-        self.node_colors = {}
         self.old_line = []
         self.qtables_dict = {}
-        self.gameNum = 0
         self.q_tables = {}
         self.axs = []
-        self.history = history
-
-        self.timeBuffer = timebuffer
-        self.timer = timebuffer
-        self.resetTimer()
-        self.timerLock = Lock()
-        self.timerCondition = Condition(self.timerLock)
-
-        self.timerThread = CounterThread(self)
-        self.timerThread.start()
+        self.rewards = []
+        nashQ.attach(self)
 
         # create output widgets
         self.out = widgets.Output()
@@ -60,6 +33,10 @@ class FinalDisplay:
         self.slider.observe(self.__on_value_change, names='value')
         self.output_widget = widgets.Output()
         self.box = widgets.VBox([self.out, self.slider, self.output_widget])
+
+        self.graph = graphClass.GraphClass()
+        self.graph.create_graph(env)
+        self.graph.current_state_set(0)
 
         # create figure and axes
         with self.out:
@@ -72,55 +49,43 @@ class FinalDisplay:
             self.axs[1].set_xlim(0, 1000)
             self.fig.tight_layout(h_pad=4)
             plt.show()
+            self.graph.plot(self.axs[0], self.out)
 
-    def resetTimer(self):
-        self.timer = self.timeBuffer
-
-    def update(self, gamesHistory, rewards, graphDisplay: EnvGraphDisplay):
-        self.graph, self.edge_labels = graphDisplay.getGraph()
+    def update(self, gamesHistory: History, rewards):
         self.history = gamesHistory
-        self.node_colors = {
-            state: 'b' for state in range(self.env.getNGames())}
-        self.__plot_graph(self.gameNum)
-        self.__plot_rewards(rewards)
+        self.rewards = np.array(rewards)[:,:,0]
+        self.__plot_rewards(self.rewards)
 
     def __plot_rewards(self, rewards):
         self.slider.max = len(self.history.getHistory()) - 1
-        sns.set_theme(style="whitegrid")
         rewards_players, rewards_sum = self.__smooth_rewards(rewards)
         i = 0
         with self.out:
+            self.axs[1].clear()
             for player in rewards_players:
                 self.axs[1].plot(player, label='Player' + str(i))
                 i += 1
             self.axs[1].plot(rewards_sum, label='Sum')
-            self.axs[1].set_title('Rewards')
+            self.axs[1].set_title('Rewards during the training episodes')
             self.axs[1].set_xlabel('Episodes')
-            self.axs[1].set_ylabel('Rewards')
+            self.axs[1].set_ylabel('Reward')
             self.axs[1].legend()
 
     def __smooth_rewards(self, rewards, window=100):
         rewardsPlayersSmooth = []
-        for i in range(rewards.shape[1]):
-            cumsum = np.cumsum(rewards[:, i])
+        for i in range(rewards.shape[0]):
+            cumsum = np.cumsum(rewards[i, :])
             cumsum[window:] = cumsum[window:] - cumsum[:-window]
             rewardsPlayersSmooth.append(cumsum[window - 1:] / window)
 
         rewardsPlayersSmooth = np.array(rewardsPlayersSmooth)
-        print("SHAPE:", rewardsPlayersSmooth.shape)
         return rewardsPlayersSmooth, np.sum(rewardsPlayersSmooth, axis=0)
 
     def __plot_graph(self, game_num):
         current_state = self.history.get(game_num).get('current_state')
-        for state in self.node_colors:
-            if state == current_state:
-                self.node_colors[state] = 'r'
-            else:
-                self.node_colors[state] = 'b'
-        print(self.node_colors)
+        self.graph.current_state_set(current_state)
         with self.out:
-            PlotGraph(
-                self.graph, self.axs[0], self.edge_labels, self.node_colors).plot(self.out)
+            self.graph.plot(self.axs[0], self.out)
 
     def __on_value_change(self, change):
         # print vertical red line in all subplots at the selected game number

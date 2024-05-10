@@ -9,7 +9,7 @@ import sys
 sys.path.append('../../')
 
 if True:
-    from Interface.Classes.GraphPlotter import PlotGraph
+    import Interface.Classes.GraphClass as graphClass
     from Model.Environment import Environment, EnvironmentObserver, Game, TransitionProfile
 
 
@@ -32,9 +32,6 @@ class EnvGraphDisplay(EnvironmentObserver):
     def __init__(self, env: Environment, timeBuffer=1):
         self.env = env
         env.attach(self)
-        self.graph = nx.DiGraph()
-        self.edge_labels = {}
-        self.node_colors = {}
 
         self.timeBuffer = timeBuffer
         self.timer = timeBuffer
@@ -70,37 +67,10 @@ class EnvGraphDisplay(EnvironmentObserver):
             self.__execute_tasks()
 
     def update_graph(self):
-        self.edge_labels.clear()
-        for i in range(self.env.getGames().shape[0]):
-            self.graph.add_node(i)
-            game = self.env.getGame(i)
-
-            # find all non empty indexes
-            actionProfiles = game.getAllActionProfiles()
-
-            for action in actionProfiles:
-                games, probs = game.getTransition(
-                    tuple(action)).getTransitions()
-                for g, p in zip(games, probs):
-                    self.graph.add_edge(i, g)
-                    if self.edge_labels.get((i, g)) is None:
-                        self.edge_labels[(i, g)] = str(
-                            action) + ': ' + str(p)
-                    else:
-                        self.edge_labels[(i, g)] += '\n' + \
-                            str(action) + ': ' + str(p)
-
-        for node in list(self.graph.nodes):
-            self.node_colors[node] = 'b'
-
-        print(self.graph)
-
+        graph = graphClass.GraphClass()
+        graph.create_graph(self.env)
         self.ax.clear()
-        PlotGraph(self.graph, self.ax, self.edge_labels,
-                  self.node_colors).plot(self.out)
+        graph.plot(self.ax, self.out)
 
     def get_widget(self):
         return self.out
-
-    def getGraph(self):
-        return self.graph, self.edge_labels

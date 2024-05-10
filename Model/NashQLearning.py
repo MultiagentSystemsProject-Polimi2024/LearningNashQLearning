@@ -65,7 +65,7 @@ class Agent:
         ) > epsilon else np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()))
 
 class NashQLearningObserver:
-    def update(self, history: History) ->None:
+    def update(self, history: History, NashQRewards) ->None:
         pass
 
 
@@ -86,6 +86,7 @@ class NashQLearning:
         self.reset = False
 
         self.observers = []
+        environment.attach(self)
 
         # decide strategy for nash equilibria computation
         if environment.NPlayers == 2:
@@ -186,9 +187,9 @@ class NashQLearning:
             # add the history element to the history
             self.history.add(t, history_element)
 
-            #notify the observers every 500 episodes
-            if t % 500 == 0:        
-                self.notify(self.history)
+            #notify the observers every 1000 episodes
+            if t % 1000 == 0:        
+                self.notify(self.history, self.NashQRewards)
 
             # update the state
             if (reset and self.goal_state != None and currentState == self.goal_state):
@@ -198,6 +199,8 @@ class NashQLearning:
 
             # update the loading bar
             self.widget.gamesLoadingBarNashQ.value += 1
+            
+        self.notify(self.history, self.NashQRewards)
         return self.totalReward, self.diffs, self.NashQRewards, self.history
 
     def startLearning(self):
@@ -393,9 +396,9 @@ class NashQLearning:
     def detach(self, observer: NashQLearningObserver):
         self.observers.remove(observer) 
     
-    def notify(self, history: History):
+    def notify(self, history: History, NashQRewards):
         for observer in self.observers:
-            observer.update(history)
+            observer.update(history, NashQRewards)
     
     # returns the widgets
     def getDisplayable(self):
