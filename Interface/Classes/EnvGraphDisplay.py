@@ -70,7 +70,7 @@ class EnvGraphDisplay(EnvironmentObserver):
         graph = graphClass.GraphClass()
         graph.create_graph(self.env)
         self.ax.clear()
-        graph.plot(self.ax, self.out)
+        graph.plotGraph(self.ax)
 
     def get_widget(self):
         return self.out

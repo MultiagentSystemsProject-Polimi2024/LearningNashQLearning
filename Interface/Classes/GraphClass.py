@@ -1,6 +1,8 @@
 import networkx as nx
 from netgraph import Graph
 import matplotlib.pyplot as plt
+import ipywidgets as widgets
+
 import sys
 sys.path.append('../../')
 
@@ -40,11 +42,10 @@ class GraphClass:
             self.node_colors.update({node: 'blue'})
         return self
 
-    def plot(self, ax, out):
-        with out:
-            Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=5, fontweight='bold'), edge_layout='arc', node_size=6,
-                  edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.2, edge_labels_rotate=False)
-    
+    def plotGraph(self, ax: plt.Axes):
+        Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=5, fontweight='bold'), edge_layout='arc', node_size=6,
+              edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.2, edge_labels_rotate=False)
+
     def current_state_set(self, state):
         for node in list(self.graph.nodes):
             if node == state:
