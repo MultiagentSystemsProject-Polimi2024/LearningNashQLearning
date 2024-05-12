@@ -131,7 +131,7 @@ class FinalDisplay(NashQLearningObserver):
 
         # create figure and axes
         with self.graphOut:
-            self.graphFig, self.graphAx = plt.subplots(figsize=(6, 3))
+            self.graphFig, self.graphAx = plt.subplots(figsize=(8, 8))
             self.graphFig.canvas.header_visible = False
             self.graphAx.set_title('')
             self.graphAx.get_xaxis().set_visible(False)
@@ -153,7 +153,6 @@ class FinalDisplay(NashQLearningObserver):
         self.slider.set_trait(name='value', value=self.slider.value + 1)
 
     def update(self, gamesHistory: History, rewards):
-        print('Updating')
         self.history = gamesHistory
         self.rewards = np.array(rewards)[:, :, 0]
         self.slider.max = len(self.rewards[0]) - 1
@@ -275,6 +274,15 @@ class FinalDisplay(NashQLearningObserver):
             qTables.append(self.history.get(self.gameNum).get('Q' + str(i)))
         return qTables
 
+    def __updateGraphLabels(self):
+        qTable = self.history.get(self.gameNum).get('Q0')
+        actionProfiles = np.ndenumerate(qTable.T[0].T)
+
+        for action, _ in actionProfiles:
+            value = qTable[action]
+            valueStr = str([round(v, 2) for v in value])
+            self.graph.setActionLabel(action[0], action[1:], valueStr)
+
     def __on_value_change(self, change):
         self.gameNum = int(change['new'])
 
@@ -282,6 +290,7 @@ class FinalDisplay(NashQLearningObserver):
         self.line.set_xdata(self.gameNum)
         self.plotAx.figure.canvas.draw()
 
+        self.__updateGraphLabels()
         self.__plot_graph()
 
         # Update current game field
