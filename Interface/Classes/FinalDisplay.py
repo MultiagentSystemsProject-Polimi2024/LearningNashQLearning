@@ -240,6 +240,11 @@ class FinalDisplay(NashQLearningObserver):
         self.graphAx.clear()
         current_state = self.history.get(self.gameNum).get('current_state')
         self.graph.current_state_set(current_state)
+
+        if self.gameNum < len(self.history.getHistory()) - 1:
+            next_state = self.history.get(self.gameNum+1).get('current_state')
+            self.graph.setCurrentActionProfile(current_state, next_state)
+
         self.graph.plotGraph(self.graphAx)
 
     def __getQTables(self):
@@ -270,17 +275,6 @@ class FinalDisplay(NashQLearningObserver):
             self.history.get(self.gameNum).get('payoff'))
 
         self.updateQTableDisplay(self.__getQTables())
-
-        # with self.plotOut:
-        #     self.plotOut.clear_output(True)
-        #     for key in self.history.get(change['new']).keys():
-        #         if key == 'current_state':
-        #             continue
-
-        #         print("Q-tables player" + key + ":\n")
-        #         for q in self.history.get(change['new']).get(key):
-        #             print(q)
-        #             print("\n")
 
     def setWindow(self, windowPercentage: int):
         self.windowPercentage = windowPercentage
