@@ -4,7 +4,7 @@ import numpy as np
 import networkx as nx
 from netgraph import Graph
 from time import sleep
-from threading import Thread, Condition, Lock
+from threading import Thread, Event
 import seaborn as sns
 import sys
 sys.path.append('../../')
@@ -52,21 +52,40 @@ class FinalDisplay(NashQLearningObserver):
 
         # Create the slider widget
         self.slider = widgets.IntSlider(value=self.gameNum, min=0, max=0, step=1, description='Game num:',
-                                        continuous_update=False, readout=True, readout_format='d')
+                                        continuous_update=False, readout=True, readout_format='d', layout=widgets.Layout(width='50%', height='50px'))
         self.slider.observe(self.__on_value_change, names='value')
 
+        self.playSlider = widgets.Play(
+            value=self.gameNum, min=0, max=0, step=1, description='Game num:', interval=1000, continuous_update=False, disabled=False)
+
+        widgets.jslink((self.playSlider, 'value'), (self.slider, 'value'))
+        widgets.jslink((self.playSlider, 'max'), (self.slider, 'max'))
+
         self.nextButton = widgets.Button(
-            description='', icon='arrow-right')
+            description='', icon='arrow-right', layout=widgets.Layout(width='50px', height='50px'))
         self.nextButton.on_click(
             lambda x: self.slider.set_trait(name='value', value=self.slider.value + 1 if self.slider.value < self.slider.max else self.slider.max))
 
         self.prevButton = widgets.Button(
-            description='', icon='arrow-left')
+            description='', icon='arrow-left', layout=widgets.Layout(width='50px', height='50px'))
         self.prevButton.on_click(
             lambda x: self.slider.set_trait(name='value', value=self.slider.value - 1 if self.slider.value > 0 else 0))
 
-        self.sliderBox = widgets.HBox(
-            [self.prevButton, self.slider, self.nextButton])
+        self.speedOptions = widgets.Dropdown(
+            options=[1, 2, 5, 10, 20, 50, 100],
+            value=1,
+            description='Speed [game/sec]:',
+            style={'description_width': 'initial'},
+            layout=widgets.Layout(width='200px', height='20px')
+        )
+        self.speedOptions.observe(
+            lambda change: self.playSlider.set_trait(name='interval', value=1000/change['new']), names='value')
+
+        self.sliderBox = widgets.VBox([
+            widgets.HBox(
+                [self.playSlider, self.slider, self.prevButton, self.nextButton]),
+            self.speedOptions
+        ])
 
         # Create the output widget for the plots
         self.plotOut = widgets.Output()
@@ -129,6 +148,9 @@ class FinalDisplay(NashQLearningObserver):
             self.plotAx.set_xlim(0, 1000)
             plt.tight_layout()
             plt.show()
+
+    def next(self):
+        self.slider.set_trait(name='value', value=self.slider.value + 1)
 
     def update(self, gamesHistory: History, rewards):
         print('Updating')
@@ -256,11 +278,9 @@ class FinalDisplay(NashQLearningObserver):
     def __on_value_change(self, change):
         self.gameNum = int(change['new'])
 
-        # clear the previous line
-        # self.line.remove()
+        # Update the vertical line
         self.line.set_xdata(self.gameNum)
-        # self.line = self.plotAx.axvline(
-        #     x=int(self.gameNum), color='r', linestyle='--')
+        self.plotAx.figure.canvas.draw()
 
         self.__plot_graph()
 
