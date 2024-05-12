@@ -226,10 +226,10 @@ class FinalDisplay(NashQLearningObserver):
             cumsum = np.cumsum(rewards[i, :])
             cumsum[window:] = cumsum[window:] - cumsum[:-window]
 
-            cumsum = cumsum[window - 1:] / window
+            cumsum = cumsum / window
 
-            # interpolate the cumsum array to mantain the same size
-            cumsum = np.insert(cumsum, 0, np.zeros(window - 1))
+            for i in range(1, window):
+                cumsum[i] = cumsum[i] / i * window
 
             rewardsPlayersSmooth.append(cumsum)
 
