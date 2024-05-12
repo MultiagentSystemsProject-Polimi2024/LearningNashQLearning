@@ -210,6 +210,7 @@ class NashQLearning:
             self.widget.gamesLoadingBarNashQ.value += 1
 
         self.notify(self.history, self.NashQRewards)
+        self.widget.notifyEnd()
         return self.totalReward, self.diffs, self.NashQRewards, self.history
 
     def startLearning(self):
@@ -461,7 +462,6 @@ class NashQLearningWidgets (GamesNObserver):
         #gamma widget
         self.gammaWidget = widgets.FloatText(
             value=0.9,
-            # layout=widgets.Layout(width = '50%'),
             description='Gamma:',
             disabled=False,
             min=0,
@@ -473,7 +473,6 @@ class NashQLearningWidgets (GamesNObserver):
         #alfa widget
         self.alfaWidget = widgets.FloatText(
             value=0.5,
-            # layout=widgets.Layout(width = '50%'),
             description='Alfa:',
             disabled=False,
             min=0,
@@ -485,7 +484,6 @@ class NashQLearningWidgets (GamesNObserver):
         #epsilon widget
         self.epsilonWidget = widgets.FloatText(
             value=0.1,
-            # layout=widgets.Layout(width = '50%'),
             description='Epsilon:',
             disabled=False,
             min=0,
@@ -497,8 +495,6 @@ class NashQLearningWidgets (GamesNObserver):
         #episodes widget
         self.episodesWidget = widgets.IntText(
             value=1,
-            # justify_content = 'center',
-            # layout=widgets.Layout(width = '50%'),
             description='Episodes:',
             disabled=False,
             min=1
@@ -511,8 +507,6 @@ class NashQLearningWidgets (GamesNObserver):
             options=[(str(i), i) for i in range(len(self.nashQlearning.env.getGames()))],
             description = "Goal state: ",
             value=0,
-            # layout=widgets.Layout(width = '100px', positioning = 'right'),
-            # # description='Goal state:',
             disabled=False,
         )
 
@@ -523,9 +517,6 @@ class NashQLearningWidgets (GamesNObserver):
             options=[(str(i), i) for i in range(len(self.nashQlearning.env.getGames()))],
             description = "Start state: ",
             value=0,
-            # layout=widgets.Layout(width = '100px'),
-            # # description='Start state:',
-            # style={'description_width': 'initial'},
             disabled=False,
         )
 
@@ -545,52 +536,26 @@ class NashQLearningWidgets (GamesNObserver):
             bar_style='info',
         )
 
-        # self.topWidget = widgets.HBox([self.episodesWidget, self.gammaWidget])
-        # self.eps = widgets.HBox([self.epsilonWidget, self.decayingEpsilonWidget])
-        # self.alf = widgets.HBox([self.alfaWidget, self.pureTrainingEpWidget])
-
-        # self.vboxA = widgets.VBox(
-        #     [self.topWidget, self.eps, self.alf])
-        #                            #,self.resetWidget, self.goalStateWidget, self.startingStateWidget]) #widgets.HBox([widgets.Label('Starting state:'), self.startingStateWidget])]
-
-        # self.hboxC = widgets.HBox([widgets.Label("Start state: "), self.startingStateWidget, widgets.Label("Goal state: "), self.goalStateWidget])
-        # self.vboxB = widgets.VBox(
-        #     [self.resetWidget, self.hboxC], justify_content = 'center')
-       
-        # self.hboxB = widgets.HBox(
-        #     [self.startButton, self.gamesLoadingBarNashQ])
-
-        # self.vbox = widgets.VBox([self.vboxA, self.vboxB, self.hboxB])
-
-        # self.r = widgets.AppLayout(#header=self.episodesWidget,
-        #   left_sidebar=self.vboxA,
-        #   center=None,
-        #   right_sidebar=self.vboxB,
-        #   footer=self.hboxB)
-
-        # self.r = widgets.VBox([self.episodesWidget, self.r])
-
-
-        #creazione box e titoli HTML 
-
-        # self.box = widgets.GridBox(layout=widgets.Layout(
-        #     grid_template_columns="repeat(2, 50%)"))
-        # self.title = widgets.HTML(value="<h2>Action Profile Selection</h2>")
-
-        # self.widget = widgets.VBox([self.title, self.box])
-        # self.box.children = self.widgets
-        self.text = widgets.HTML(value="Tick if you want to restart every time the goal is reached:")
+        #self.text = widgets.HTML(value="Tick if you want to restart every time the goal is reached:")
+        self.text = widgets.Label("Tick if you want to restart every time the goal is reached:")
+        self.endLabel = widgets.Label("")
         self.grid = widgets.GridBox(layout = widgets.Layout(
                                         width = '100%',
                                         grid_template_columns='repeat(2, 1fr)',
-                                        grid_template_rows='repeat(6, 1fr)',
+                                        grid_template_rows='repeat(7, 1fr)',
                                         grid_gap='10px'
                                     ))
-        self.grid.children = [self.episodesWidget, self.gammaWidget, self.epsilonWidget, self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget, self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget, self.startButton, self.gamesLoadingBarNashQ]
+        self.grid.children = [self.episodesWidget, self.gammaWidget, self.epsilonWidget, 
+                              self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget, 
+                              self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget, 
+                              self.startButton, self.gamesLoadingBarNashQ, self.endLabel]
 
+    def notifyEnd(self):
+        self.endLabel.value = "Training completed"
     
     # start the NashQ learning algorithm on button click
     def start(self, b):
+        self.endLabel.value = ""
         self.nashQlearning.startLearning()
 
     def setEpsilon(self, epsilon: float):
