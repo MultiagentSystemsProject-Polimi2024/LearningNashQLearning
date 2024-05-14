@@ -39,12 +39,31 @@ class EnvGraphDisplay(EnvironmentObserver):
         self.timerLock = Lock()
         self.timerCondition = Condition(self.timerLock)
 
+        self.graph: graphClass.GraphClass = graphClass.GraphClass()
+
         self.timerThread = CounterThread(self)
         self.timerThread.start()
+
+        self.labelOptions = {
+            'Transition Probabilities': self.setLabelsToTp,
+            'Payoffs': self.setLabelsToPayoff
+        }
+
+        self.labelOptionsDropdown = widgets.Dropdown(
+            options=self.labelOptions.keys(),
+            value=list(self.labelOptions.keys())[0],
+            description='Labels:',
+            disabled=False,
+        )
+
+        self.labelOptionsDropdown.observe(
+            lambda x: self.updateEnv(self.env), names='value')
 
         self.out = widgets.Output()
         self.button = widgets.Button(description='Update Graph')
         self.vBox = widgets.VBox([self.out, self.button])
+
+        self.box = widgets.VBox([self.labelOptionsDropdown, self.out])
 
         with self.out:
             fig, self.ax = plt.subplots()
@@ -61,6 +80,8 @@ class EnvGraphDisplay(EnvironmentObserver):
 
     """"
     def updateEnv(self, env: Environment):
+        self.resetTimer()
+
         if (not self.timerLock.locked()):
             with self.timerCondition:
                 self.timerCondition.notify()
@@ -69,6 +90,30 @@ class EnvGraphDisplay(EnvironmentObserver):
 
     def updateEnv(self, env: Environment):
         self.env = env
+
+    def setLabelsToTp(self):
+        for gameId, game in enumerate(self.env.getGames()):
+            for action in game.getAllActionProfiles():
+                games, probs = game.getTransition(
+                    tuple(action)).getTransitions()
+                for g, p in zip(games, probs):
+                    self.graph.setActionLabel(
+                        gameId, g, tuple(action), f'{p:.2f}')
+        # self.updateEnv(self.env)
+
+    def setLabelsToPayoff(self):
+        for gameId, game in enumerate(self.env.getGames()):
+            for action in game.getAllActionProfiles():
+                payoffs = game.getPayoff(tuple(action))
+                games, probs = game.getTransition(
+                    tuple(action)).getTransitions()
+                for g, p in zip(games, probs):
+                    label = ''
+                    for i, payoff in enumerate(payoffs):
+                        label += f'{payoff:.2f} '
+                    self.graph.setActionLabel(
+                        gameId, g, tuple(action), label)
+        # self.updateEnv(self.env)
 
     def countdown(self):
         while True:
@@ -95,3 +140,8 @@ class EnvGraphDisplay(EnvironmentObserver):
 
     def get_widget(self):
         return self.vBox
+        self.graph = graphClass.GraphClass()
+        self.graph.create_graph(self.env)
+        self.ax.clear()
+        self.labelOptions[self.labelOptionsDropdown.value]()
+        self.graph.plotGraph(self.ax)

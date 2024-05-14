@@ -24,6 +24,11 @@ class TransitionProfile:
         probabilities = list(probabilities)
         return np.random.choice(nextGames, p=probabilities)
 
+    def setNGames(self, nGames: int) -> None:
+        for game in self.transitions.keys():
+            if game.id >= nGames:
+                del self.transitions[game]
+
     def isEmpty(self) -> bool:
         return len(self.transitions) == 0
 
@@ -37,7 +42,8 @@ class GameObserver:
 
 
 class Game:
-    def __init__(self, Nplayers, possibleActions=None) -> None:
+    def __init__(self, Nplayers, possibleActions=None, id: int = 0) -> None:
+        self.id = id
         self.NPlayers = Nplayers
         self.transitionMatrix = None
         self.observers = []
@@ -176,6 +182,13 @@ class Game:
             observer.update(self)
         pass
 
+    def setNGames(self, nGames: int) -> None:
+        linearizedTransitionMatrix = np.reshape(
+            self.transitionMatrix, np.prod(self.possibleActions))
+
+        for transitionProfile in linearizedTransitionMatrix:
+            transitionProfile.setNGames(nGames)
+
     def __str__(self) -> str:
         return f"""Game: {self.possibleActions} \n PossibileActions:{self.possibleActions} \n NPlayers: {self.NPlayers} \n Transition: {self.getTransitionMatrixStr()} \n Payoff: {self.payoffMatrix}"""
 
@@ -184,16 +197,18 @@ class EnvironmentObserver:
     def updateEnv(self, environment) -> None:
         pass
 
+
 class GamesNObserver:
     def updateGames(self) -> None:
         pass
+
 
 class Environment(GameObserver):
     def __init__(self, NGames: int = 2, NPlayers: int = 2) -> None:
         self.NPlayers = NPlayers
         possibleActions = tuple([1 for _ in range(NPlayers)])
         self.Games = np.array(
-            [Game(Nplayers=NPlayers, possibleActions=possibleActions) for i in range(NGames)])
+            [Game(Nplayers=NPlayers, possibleActions=possibleActions, id=i) for i in range(NGames)])
         for g in self.Games:
             g.attach(self)
         self.CurrentGameIndex = 0
@@ -248,9 +263,13 @@ class Environment(GameObserver):
     def setNGames(self, nGames: int = 2, possibleActions: np.ndarray = None):
         if possibleActions is None:
             possibleActions = tuple([1 for _ in range(self.NPlayers)])
+
+        for game in self.Games:
+            game.setNGames(nGames)
+
         for _ in range(max(0, nGames - len(self.Games))):
             newGame = Game(Nplayers=self.NPlayers,
-                           possibleActions=possibleActions)
+                           possibleActions=possibleActions, id=len(self.Games))
             newGame.attach(self)
             self.Games = np.append(self.Games, newGame)
 
@@ -264,7 +283,7 @@ class Environment(GameObserver):
     def update(self, game: Game) -> None:
         self.notify()
         pass
-    
+
     def attachGameObserver(self, observer: Type[GamesNObserver]) -> None:
         self.gameObservers.append(observer)
         pass

@@ -16,6 +16,7 @@ class GraphClass:
         self.edge_labels = {}
         self.node_colors = {}
         self.edge_colors = {}
+        self.actionLabels = {}
 
     def create_graph(self, env: Environment):
         self.edge_labels.clear()
@@ -30,18 +31,25 @@ class GraphClass:
             # find all non empty indexes
             actionProfiles = game.getAllActionProfiles()
 
+            # self.actionEdgeMapping.clear()
+
             for action in actionProfiles:
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
+
                 for g, p in zip(games, probs):
                     p = round(p, 3)
+                    if p > 0:
+                        self.setActionLabel(i, g, tuple(action), '')
+
                     self.graph.add_edge(i, g)
-                    if self.edge_labels.get((i, g)) is None:
-                        self.edge_labels[(i, g)] = str(
-                            action) + ': ' + str(p)
-                    else:
-                        self.edge_labels[(i, g)] += '\n' + \
-                            str(action) + ': ' + str(p)
+                    # if self.edge_labels.get((i, g)) is None:
+                    #     self.edge_labels[(i, g)] = str(
+                    #         action) + ': ' + str(p)
+                    # else:
+                    #     self.edge_labels[(i, g)] += '\n' + \
+                    #         str(action) + ': ' + str(p)
+
         for node in list(self.graph.nodes):
             self.node_colors.update({node: 'blue'})
 
@@ -52,8 +60,9 @@ class GraphClass:
 
     def plotGraph(self, ax: plt.Axes):
         ax.cla()
-        Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=5, fontweight='bold'), edge_layout='arc', node_size=6,
-              edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.2, edge_labels_rotate=False, edge_color=self.edge_colors)
+        self.updateLabelsFromActionLabels()
+        Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=10, fontweight='bold'), edge_layout='arc', node_size=10,
+              edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.5, edge_labels_rotate=False, edge_color=self.edge_colors)
 
     def current_state_set(self, state):
         for node in list(self.graph.nodes):
@@ -68,3 +77,27 @@ class GraphClass:
                 self.edge_colors.update({edge: 'red'})
             else:
                 self.edge_colors.update({edge: 'black'})
+
+    def setActionLabel(self, fromGame, toGame, action, label):
+        self.actionLabels.update({(fromGame, toGame, tuple([action])): label})
+
+    def updateLabelsFromActionLabels(self):
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            self.edge_labels.update({(fgame, tgame): ""})
+
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            edge = (fgame, tgame)
+            self.edge_labels[edge] += f'{action[0]}: ' + label + '\n'
+
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            edge = (fgame, tgame)
+            self.edge_labels[edge] = self.edge_labels[edge].strip()
+
+    '''
+    Set the labels of the edges of the graph
+    @param labelFunction: function that takes an edge as input and returns a string
+    '''
+
+    def setLabels(self, labelFunction):
+        for edge in list(self.graph.edges):
+            self.edge_labels.update({edge: labelFunction(edge)})
