@@ -113,7 +113,7 @@ class FinalDisplay(NashQLearningObserver):
             [self.payoffWidgetSubTitle, self.payoffWidget])
 
         # Create the Q Table widget
-        self.qTableWidget = widgets.Tab()
+        self.qTableWidget = widgets.Tab(value=0)
 
         self.qTableSubTitle = widgets.HTML(
             value="<h3>Current Q-Tables</h3>")
@@ -279,9 +279,15 @@ class FinalDisplay(NashQLearningObserver):
         actionProfiles = np.ndenumerate(qTable.T[0].T)
 
         for action, _ in actionProfiles:
+            fromGame = action[0]
+            toGames = self.env.getGame(fromGame).getTransition(
+                tuple(action[1:])).getTransitions()[0]
             value = qTable[action]
             valueStr = str([round(v, 2) for v in value])
-            self.graph.setActionLabel(action[0], action[1:], valueStr)
+
+            for toGame in toGames:
+                self.graph.setActionLabel(
+                    fromGame, toGame, action[1:], valueStr)
 
     def __on_value_change(self, change):
         self.gameNum = int(change['new'])

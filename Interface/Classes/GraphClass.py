@@ -17,7 +17,6 @@ class GraphClass:
         self.node_colors = {}
         self.edge_colors = {}
         self.actionLabels = {}
-        self.actionEdgeMapping = {}
 
     def create_graph(self, env: Environment):
         self.edge_labels.clear()
@@ -32,23 +31,23 @@ class GraphClass:
             # find all non empty indexes
             actionProfiles = game.getAllActionProfiles()
 
+            # self.actionEdgeMapping.clear()
+
             for action in actionProfiles:
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
 
-                self.actionLabels.update({(i, tuple(action)): ""})
-
                 for g, p in zip(games, probs):
-                    self.graph.add_edge(i, g)
-                    if self.edge_labels.get((i, g)) is None:
-                        self.edge_labels[(i, g)] = str(
-                            action) + ': ' + str(p)
-                    else:
-                        self.edge_labels[(i, g)] += '\n' + \
-                            str(action) + ': ' + str(p)
+                    if p > 0:
+                        self.setActionLabel(i, g, tuple(action), '')
 
-                    self.actionEdgeMapping.update(
-                        {(i, tuple(action)): (i, g)})
+                    self.graph.add_edge(i, g)
+                    # if self.edge_labels.get((i, g)) is None:
+                    #     self.edge_labels[(i, g)] = str(
+                    #         action) + ': ' + str(p)
+                    # else:
+                    #     self.edge_labels[(i, g)] += '\n' + \
+                    #         str(action) + ': ' + str(p)
 
         for node in list(self.graph.nodes):
             self.node_colors.update({node: 'blue'})
@@ -77,24 +76,20 @@ class GraphClass:
             else:
                 self.edge_colors.update({edge: 'black'})
 
-    def setActionLabel(self, game, action, label):
-        self.actionLabels.update({(game, action): label})
+    def setActionLabel(self, fromGame, toGame, action, label):
+        self.actionLabels.update({(fromGame, toGame, tuple([action])): label})
 
     def updateLabelsFromActionLabels(self):
-        for (game, action), label in self.actionLabels.items():
-            edge = self.actionEdgeMapping.get((game, action))
-            if edge is not None:
-                self.edge_labels.update({edge: ""})
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            self.edge_labels.update({(fgame, tgame): ""})
 
-        for (game, action), label in self.actionLabels.items():
-            edge = self.actionEdgeMapping.get((game, action))
-            if edge is not None:
-                self.edge_labels[edge] += f'{action}: ' + label + '\n'
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            edge = (fgame, tgame)
+            self.edge_labels[edge] += f'{action[0]}: ' + label + '\n'
 
-        for (game, action), label in self.actionLabels.items():
-            edge = self.actionEdgeMapping.get((game, action))
-            if edge is not None:
-                self.edge_labels[edge] = self.edge_labels[edge][:-1]
+        for (fgame, tgame, action), label in self.actionLabels.items():
+            edge = (fgame, tgame)
+            self.edge_labels[edge] = self.edge_labels[edge].strip()
 
     '''
     Set the labels of the edges of the graph
