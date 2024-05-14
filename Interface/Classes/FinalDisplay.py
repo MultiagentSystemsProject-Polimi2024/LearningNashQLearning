@@ -182,6 +182,9 @@ class FinalDisplay(NashQLearningObserver):
             self.payoffWidget.children[i].value = str(pay)
 
     def setQTableDisplay(self, qTables):
+        if self.env.NPlayers > 2:
+            return
+
         self.qTableWidget.children = []
         for i, qTable in enumerate(qTables):
             playerMatrix = widgets.Tab()
@@ -206,6 +209,9 @@ class FinalDisplay(NashQLearningObserver):
             self.qTableWidget.set_title(i, 'Player ' + str(i))
 
     def updateQTableDisplay(self, qTables):
+        if self.env.NPlayers > 2:
+            return
+
         for i, qTable in enumerate(qTables):
             for j, game in enumerate(qTable):
                 for k, q in enumerate(game):
