@@ -25,8 +25,9 @@ class TransitionProfile:
         return np.random.choice(nextGames, p=probabilities)
 
     def setNGames(self, nGames: int) -> None:
-        for game in self.transitions.keys():
-            if game.id >= nGames:
+        keys = list(self.transitions.keys())
+        for game in keys:
+            if game >= nGames:
                 del self.transitions[game]
 
     def isEmpty(self) -> bool:

@@ -61,9 +61,7 @@ class EnvGraphDisplay(EnvironmentObserver):
 
         self.out = widgets.Output()
         self.button = widgets.Button(description='Update Graph')
-        self.vBox = widgets.VBox([self.out, self.button])
-
-        self.box = widgets.VBox([self.labelOptionsDropdown, self.out])
+        self.box = widgets.VBox([self.labelOptionsDropdown, self.button, self.out])
 
         with self.out:
             fig, self.ax = plt.subplots()
@@ -139,7 +137,7 @@ class EnvGraphDisplay(EnvironmentObserver):
             graph.plotGraph(self.ax)
 
     def get_widget(self):
-        return self.vBox
+        return self.box
         self.graph = graphClass.GraphClass()
         self.graph.create_graph(self.env)
         self.ax.clear()
