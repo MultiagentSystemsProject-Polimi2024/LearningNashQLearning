@@ -90,9 +90,6 @@ class NashQLearning:
 
         self.observers = []
 
-        # TODO figure out what this is for
-        # environment.attach(self)
-
         # decide strategy for nash equilibria computation
         if environment.NPlayers == 2:
             self.computeNashEq = self.twoPlNashEq
@@ -549,6 +546,8 @@ class NashQLearningWidgets (GamesNObserver):
                               self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget, 
                               self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget, 
                               self.startButton, self.gamesLoadingBarNashQ, self.endLabel]
+        
+        nashQLearning.env.attachGameObserver(self)
 
     def notifyEnd(self):
         self.endLabel.value = "Training completed"
