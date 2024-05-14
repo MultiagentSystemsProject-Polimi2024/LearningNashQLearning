@@ -5,7 +5,7 @@ import os
 
 sys.path.append("../")
 
-print("Current directory:", os.getcwd())
+# print("Current directory:", os.getcwd())
 
 if True:
     from Model.Environment import GameObserver, TransitionProfile, EnvironmentObserver

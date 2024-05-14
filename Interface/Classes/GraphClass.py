@@ -34,6 +34,7 @@ class GraphClass:
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
                 for g, p in zip(games, probs):
+                    p = round(p, 3)
                     self.graph.add_edge(i, g)
                     if self.edge_labels.get((i, g)) is None:
                         self.edge_labels[(i, g)] = str(
@@ -50,6 +51,7 @@ class GraphClass:
         return self
 
     def plotGraph(self, ax: plt.Axes):
+        ax.cla()
         Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=5, fontweight='bold'), edge_layout='arc', node_size=6,
               edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.2, edge_labels_rotate=False, edge_color=self.edge_colors)
 
