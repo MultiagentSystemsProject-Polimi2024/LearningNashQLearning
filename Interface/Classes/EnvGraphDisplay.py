@@ -25,7 +25,7 @@ class CounterThread(Thread):
                 while self.envGraphDisplay.timer > 0:
                     sleep(1)
                     self.envGraphDisplay.timer -= 1
-                # self.envGraphDisplay.update_graph()
+                self.envGraphDisplay.update_graph()
 
 
 class EnvGraphDisplay(EnvironmentObserver):
@@ -60,15 +60,12 @@ class EnvGraphDisplay(EnvironmentObserver):
             lambda x: self.updateEnv(self.env), names='value')
 
         self.out = widgets.Output()
-        self.button = widgets.Button(description='Update Graph')
-        self.box = widgets.VBox([self.labelOptionsDropdown, self.button, self.out])
+        self.box = widgets.VBox([self.labelOptionsDropdown, self.out])
 
         with self.out:
             fig, self.ax = plt.subplots()
             self.ax.get_xaxis().set_visible(False)
             self.ax.get_yaxis().set_visible(False)
-
-        self.button.on_click(lambda x: self.update_graph())
 
         self.updateEnv(env)
         self.update_graph()
@@ -76,18 +73,12 @@ class EnvGraphDisplay(EnvironmentObserver):
     def resetTimer(self):
         self.timer = self.timeBuffer
 
-    """"
     def updateEnv(self, env: Environment):
-        self.resetTimer()
-
+        self.env = env
         if (not self.timerLock.locked()):
             with self.timerCondition:
                 self.timerCondition.notify()
         self.resetTimer()
-    """
-
-    def updateEnv(self, env: Environment):
-        self.env = env
 
     def setLabelsToTp(self):
         for gameId, game in enumerate(self.env.getGames()):
@@ -119,17 +110,6 @@ class EnvGraphDisplay(EnvironmentObserver):
             self.__execute_tasks()
 
     def update_graph(self):
-        print("updating graph")
-        print("Current games: ", self.env.getGames())
-        for game in self.env.getGames():
-            print("Game: ", game)
-            for action in game.getAllActionProfiles():
-                games, probs = game.getTransition(
-                tuple(action)).getTransitions()
-                print("Action: ", action)
-                for g, p in zip(games, probs):
-                    p = round(p, 3)
-                    print("Transition: g, p=", g, p)
         with self.out:
             graph = graphClass.GraphClass()
             graph.create_graph(self.env)
