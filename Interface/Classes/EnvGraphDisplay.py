@@ -23,13 +23,13 @@ class CounterThread(Thread):
             with self.envGraphDisplay.timerCondition:
                 self.envGraphDisplay.timerCondition.wait()
                 while self.envGraphDisplay.timer > 0:
-                    sleep(1)
-                    self.envGraphDisplay.timer -= 1
+                    sleep(0.1)
+                    self.envGraphDisplay.timer -= 0.1
                 self.envGraphDisplay.update_graph()
 
 
 class EnvGraphDisplay(EnvironmentObserver):
-    def __init__(self, env: Environment, timeBuffer=2):
+    def __init__(self, env: Environment, timeBuffer=2.0):
         self.env = env
         env.attach(self)
 
@@ -110,11 +110,11 @@ class EnvGraphDisplay(EnvironmentObserver):
             self.__execute_tasks()
 
     def update_graph(self):
-        with self.out:
-            graph = graphClass.GraphClass()
-            graph.create_graph(self.env)
-            self.ax.cla()
-            graph.plotGraph(self.ax)
+        self.graph = graphClass.GraphClass()
+        self.graph.create_graph(self.env)
+        self.labelOptions[self.labelOptionsDropdown.value]()
+        self.ax.cla()
+        self.graph.plotGraph(self.ax)
 
     def get_widget(self):
         return self.box
