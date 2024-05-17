@@ -185,6 +185,8 @@ class FinalDisplay(NashQLearningObserver):
         if self.env.NPlayers > 2:
             return
 
+        print(np.array(qTables).shape)
+
         self.qTableWidget.children = []
         for i, qTable in enumerate(qTables):
             playerMatrix = widgets.Tab()
@@ -200,9 +202,9 @@ class FinalDisplay(NashQLearningObserver):
 
                         qMatrix.children += (pair,)
                 qMatrix.layout.grid_template_columns = 'repeat(' + str(
-                    len(qTable[i][j])) + ', 200px)'
+                    len(qTable[j][k])) + ', 200px)'
                 qMatrix.layout.grid_template_rows = 'repeat(' + str(
-                    len(qTable[i][j][0])) + ', 80px)'
+                    len(qTable[j][k][0])) + ', 80px)'
                 playerMatrix.children += (qMatrix,)
                 playerMatrix.set_title(j, 'Game ' + str(j))
             self.qTableWidget.children += (playerMatrix,)
