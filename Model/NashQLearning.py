@@ -18,7 +18,7 @@ class QTable:
                 environment.NPlayers)]  # Number of actions for each player
             shape.append(environment.NPlayers)  # Number of players
             self.table[environment.getGameIndex(
-                game)] = np.zeros(shape, dtype=float)
+                game)] = np.zeros(shape, dtype=object)
 
 
 
