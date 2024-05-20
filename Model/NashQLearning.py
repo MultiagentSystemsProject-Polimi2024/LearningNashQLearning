@@ -304,8 +304,8 @@ class NashQLearning :
             return self.__already_seen_equilibria[self.getKey(state, payoff_matrix)]
 
         state = self.env.getCurrentGame()
-        game = pg.Game.from_arrays(payoff_matrix[state, :, :, 0], payoff_matrix[state, :, :, 1],
-                                   payoff_matrix[state, :, :, 2], payoff_matrix[state, :, :, 3], title=("gambe number"+str(state)))
+        game = pg.Game.from_arrays(payoff_matrix[:, :, :, :, 0], payoff_matrix[:, :, :, :, 1],
+                                   payoff_matrix[:, :, :, :, 2], payoff_matrix[:, :, :, :, 3], title=("gambe number"+str(state)))
         # compute the Nash Equilibrium
         eq = pg.nash.logit_solve(game).equilibria
         # normalize the equilibrium
