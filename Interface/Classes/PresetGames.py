@@ -23,11 +23,32 @@ class PresetGames:
         self.__setupActions[self.selected]()
 
     def __reset(self):
-        self.env = Env()
+        env = self.env
+        env.setNPlayers(2)
+        env.setNGames(2)
+        games = env.getGames()
+        games[0].setPossibleActions(np.array([1, 1]))
+        games[0].setTransition((0, 0), 1, 0)
+        games[0].setPayoff((0, 0), np.array([0, 0]))
+        games[0].setTransition((0, 0), 0, 0)
+        games[0].setPayoff((0, 0), np.array([0, 0]))
+
+        games[1].setPossibleActions(np.array([1, 1]))
+        games[1].setTransition((0, 0), 1, 0)
+        games[1].setPayoff((0, 0), np.array([0, 0]))
+        games[1].setTransition((0, 0), 0, 0)
+        games[1].setPayoff((0, 0), np.array([0, 0]))
+
+
+        
+
+
+        
     
     def __firstSetup(self):
         env = self.env
         env.setNPlayers(2)
+        env.setNGames(2)
         games = env.getGames()
 
         games[0].setPossibleActions(np.array([2, 2]))
@@ -63,7 +84,7 @@ class PresetGames:
     def __secondSetup(self):
         env = self.env
         env.setNPlayers(3)
-
+        env.setNGames(2)
         games = env.getGames()
 
         ################Game 0####################
@@ -125,7 +146,7 @@ class PresetGames:
     
         env = self.env
         env.setNPlayers(4)
-
+        env.setNGames(2)
         games = env.getGames()
 
         ################Game 0####################
@@ -229,4 +250,4 @@ class PresetGames:
         games[1].setPayoff((1, 1, 1, 0), np.array([-1,-1,-1,-1]))
 
         games[1].setTransition((1, 1, 1, 1), 0, 1)
-        games[1].setPayoff(1, 1, 1, 1), np.array([-2,-2,-2,-2])
+        games[1].setPayoff((1, 1, 1, 1), np.array([-2,-2,-2,-2]))
