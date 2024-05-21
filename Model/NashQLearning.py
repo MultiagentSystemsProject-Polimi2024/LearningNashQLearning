@@ -7,7 +7,7 @@ sys.path.append('../../')
 
 if True:
     from Model.History import History
-    from Model.Environment import Environment, Game, GamesNObserver
+    from Model.Environment import Environment, Game, GamesNObserver, EnvironmentObserver
 
 
 class QTable:
@@ -18,7 +18,9 @@ class QTable:
                 environment.NPlayers)]  # Number of actions for each player
             shape.append(environment.NPlayers)  # Number of players
             self.table[environment.getGameIndex(
-                game)] = np.zeros(shape, dtype=float)
+                game)] = np.zeros(shape, dtype=object)
+
+
 
     def getQTable(self):
         return self.table
@@ -35,7 +37,7 @@ class QTable:
         for game in self.table.keys():
             converted.append(self.table[game].copy())
 
-        return np.array(converted)
+        return np.array(converted, dtype=object)
 
 
 class Agent:
@@ -65,20 +67,19 @@ class Agent:
         self.currentAction = np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()), p=self.currentStrategy) if np.random.rand(
         ) > epsilon else np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()))
 
-
 class NashQLearningObserver:
     def update(self, history: History, NashQRewards) -> None:
         pass
 
 
-class NashQLearning:
+class NashQLearning :
     def __init__(self, environment: Environment):
 
         self.env = environment
         self.episodes = 1
         self.epsilon = 0.1
         self.alfa = 0.5
-        self.gamma = 0.9
+        self.gamma = 0.8
         self.decaying_epsilon = 1000
         self.pure_training_ep = 1000
         self.goal_state = None
@@ -90,23 +91,15 @@ class NashQLearning:
 
         self.observers = []
 
-        # decide strategy for nash equilibria computation
-        if environment.NPlayers == 2:
-            self.computeNashEq = self.twoPlNashEq
-            self.updateQTable = self.updateQTable2
-        elif environment.NPlayers == 3:
-            self.computeNashEq = self.threePlNashEq
-            self.updateQTable = self.updateQTable3
-        elif environment.NPlayers == 4:
-            self.computeNashEq = self.fourPlNashEq
-            self.updateQTable = self.updateQTable4
-        else:
-            Exception("The number of players must be 2, 3 or 4")
-
         self.widget = NashQLearningWidgets(self)
+
+        #self.env.attach(self)
 
     # NashQ learning algorithm for n players
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset=False, goal_state=None, startingState=None):
+        
+        self.prepareFunctions()
+        
         # reset the values of the loading bar
         self.widget.gamesLoadingBarNashQ.value = 0
 
@@ -210,6 +203,20 @@ class NashQLearning:
         self.widget.notifyEnd()
         return self.totalReward, self.diffs, self.NashQRewards, self.history
 
+    def prepareFunctions(self):
+        # decide strategy for nash equilibria computation
+        if self.env.NPlayers == 2:
+            self.computeNashEq = self.twoPlNashEq
+            self.updateQTable = self.updateQTable2
+        elif self.env.NPlayers == 3:
+            self.computeNashEq = self.threePlNashEq
+            self.updateQTable = self.updateQTable3
+        elif self.env.NPlayers == 4:
+            self.computeNashEq = self.fourPlNashEq
+            self.updateQTable = self.updateQTable4
+        else:
+            Exception("The number of players must be 2, 3 or 4")
+    
     def startLearning(self):
         self.nashQlearning(self.alfa, self.gamma, self.epsilon, self.pure_training_ep,
                            self.decaying_epsilon, self.reset, self.goal_state, self.startingState)
@@ -247,20 +254,21 @@ class NashQLearning:
         # normalize the equilibrium
         eq = eq[0].normalize()
         # convert the Nash Equilibrium to an array
-        e = []
+        tmp = []
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
-            e.append(x)
-        e = np.zeros(np.shape(e))
-
+            tmp.append(x)
+        
         for i in range(self.env.NPlayers):
             for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                e[i][j] = (float(eq[str(i+1)][str(j+1)]))
+                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+
+        e = np.array(tmp, dtype=object)
 
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
         return e
-
+    
     def threePlNashEq(self, state: Game, qTable: QTable):
         payoff_matrix = qTable.getQTable()[self.env.getGameIndex(state)]
         # if the equilibrium has already been computed return it
@@ -275,17 +283,16 @@ class NashQLearning:
         # normalize the equilibrium
         eq = eq[0].normalize()
         # convert the Nash Equilibrium to an array
-        # e = np.zeros(tuple(state.getPossibleActions()))
-        # e = np.zeros(tuple(self.env.getCurrentGame().getPossibleActions()))
-        e = []
+        tmp = []
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
-            e.append(x)
-        e = np.zeros(np.shape(e))
+            tmp.append(x)
 
         for i in range(self.env.NPlayers):
             for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                e[i][j] = (float(eq[str(i+1)][str(j+1)]))
+                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+
+        e = np.array(tmp, dtype=object)
 
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
@@ -297,22 +304,23 @@ class NashQLearning:
             return self.__already_seen_equilibria[self.getKey(state, payoff_matrix)]
 
         state = self.env.getCurrentGame()
-        game = pg.Game.from_arrays(payoff_matrix[state, :, :, 0], payoff_matrix[state, :, :, 1],
-                                   payoff_matrix[state, :, :, 2], payoff_matrix[state, :, :, 3], title=("gambe number"+str(state)))
+        game = pg.Game.from_arrays(payoff_matrix[:, :, :, :, 0], payoff_matrix[:, :, :, :, 1],
+                                   payoff_matrix[:, :, :, :, 2], payoff_matrix[:, :, :, :, 3], title=("gambe number"+str(state)))
         # compute the Nash Equilibrium
         eq = pg.nash.logit_solve(game).equilibria
         # normalize the equilibrium
         eq = eq[0].normalize()
         # convert the Nash Equilibrium to an array
-        e = []
+        tmp = []
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
-            e.append(x)
-        e = np.zeros(np.shape(e))
-
+            tmp.append(x)
+        
         for i in range(self.env.NPlayers):
             for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                e[i][j] = (float(eq[str(i+1)][str(j+1)]))
+                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+
+        e = np.array(tmp, dtype=object)
 
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
@@ -334,11 +342,11 @@ class NashQLearning:
     # player1_strategy, player2_strategy, payoff_matrix
     def expectedPayoff(self, payoff_matrix, player_strategies):
         if self.env.NPlayers == 2:
-            return np.dot(player_strategies[0], np.dot(payoff_matrix, player_strategies[1]))
+            return np.dot(player_strategies[1], np.dot(player_strategies[0], payoff_matrix))
         elif self.env.NPlayers == 3:
-            return np.dot(player_strategies[0], np.dot(player_strategies[1], np.dot(payoff_matrix, player_strategies[2])))
+            return np.dot(player_strategies[2],np.dot(player_strategies[0], np.dot(player_strategies[1], payoff_matrix)))
         elif self.env.NPlayers == 4:
-            return np.dot(player_strategies[0], np.dot(player_strategies[1], np.dot(player_strategies[2], np.dot(payoff_matrix, player_strategies[3]))))
+            return np.dot(player_strategies[3], np.dot(player_strategies[0], np.dot(player_strategies[1], np.dot(player_strategies[2], payoff_matrix))))
         else:
             Exception("The number of players must be 2, 3 or 4")
 
@@ -366,7 +374,7 @@ class NashQLearning:
         if self.env.NPlayers > 4:
             raise Exception("The number of players must be 2, 3 or 4")
         return qTable[self.env.getGameIndex(state)][tuple(actions)].copy()
-
+    
     # state must be dereferenced earlier than the other dimensions, being the qtable a dictionary qtable[state][...]...
 
     def updateQTable2(self, qTable: QTable, actions: np.array, alfa: float, gamma: float, r: np.array, next_qVal: np.array):
@@ -413,6 +421,10 @@ class NashQLearning:
 
     def getWidget(self):
         return self.widget
+    
+    # def updateEnv(self, env: Environment):
+    #     self.env = env
+    #     self.widget.updateGames()
 
 
 class NashQLearningWidgets (GamesNObserver):
@@ -434,7 +446,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # pure training episodes widget
         self.pureTrainingEpWidget = widgets.IntText(
-            value=1000,
+            value=self.nashQlearning.pure_training_ep,
             layout=widgets.Layout(width='50%'),
             description='Pure training episodes:',
             style={'description_width': 'initial'},
@@ -446,7 +458,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # decaying epsilon widget
         self.decayingEpsilonWidget = widgets.IntText(
-            value=1000,
+            value=self.nashQlearning.decaying_epsilon,
             layout=widgets.Layout(width='50%'),
             description='Pure epsilon episodes:',
             style={'description_width': 'initial'},
@@ -458,7 +470,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # gamma widget
         self.gammaWidget = widgets.FloatText(
-            value=0.9,
+            value=self.nashQlearning.gamma,
             description='Gamma:',
             disabled=False,
             min=0,
@@ -469,7 +481,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # alfa widget
         self.alfaWidget = widgets.FloatText(
-            value=0.5,
+            value=self.nashQlearning.alfa,
             description='Alfa:',
             disabled=False,
             min=0,
@@ -480,7 +492,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # epsilon widget
         self.epsilonWidget = widgets.FloatText(
-            value=0.1,
+            value=self.nashQlearning.epsilon,
             description='Epsilon:',
             disabled=False,
             min=0,
@@ -491,7 +503,7 @@ class NashQLearningWidgets (GamesNObserver):
 
         # episodes widget
         self.episodesWidget = widgets.IntText(
-            value=1,
+            value=self.nashQlearning.episodes,
             description='Episodes:',
             disabled=False,
             min=1

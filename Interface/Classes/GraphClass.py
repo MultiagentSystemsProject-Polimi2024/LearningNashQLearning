@@ -19,7 +19,6 @@ class GraphClass:
         self.actionLabels = {}
 
     def create_graph(self, env: Environment):
-        self.edge_labels.clear()
         self.node_colors.clear()
         self.edge_colors.clear()
         self.graph = nx.DiGraph()
