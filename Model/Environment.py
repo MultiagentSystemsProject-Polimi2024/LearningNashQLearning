@@ -242,12 +242,12 @@ class Environment(GameObserver):
     def reward(self, actionProfile) -> float:
         return self.getCurrentGame().getPayoff(actionProfile)
 
-    def transitionProfile(self, actionProfile) -> TransitionProfile:
-        return self.getCurrentGame().getTransition(actionProfile)
+    def transitionProfile(self, actionProfile, game: Game = None) -> TransitionProfile:
+        if game is not None:
+            return game.getTransition(actionProfile)
+        else:
+            return self.getCurrentGame().getTransition(actionProfile)
 
-    def transitionProfile(self, actionProfile, game: Game) -> TransitionProfile:
-        return self.game.getTransition(actionProfile)
-    
     def performAction(self, actionProfile) -> None:
         reward = self.reward(actionProfile)
         self.setCurrentGame(self.transitionProfile(

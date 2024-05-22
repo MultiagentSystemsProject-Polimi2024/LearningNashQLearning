@@ -20,8 +20,6 @@ class QTable:
             self.table[environment.getGameIndex(
                 game)] = np.zeros(shape, dtype=object)
 
-
-
     def getQTable(self):
         return self.table
 
@@ -67,12 +65,13 @@ class Agent:
         self.currentAction = np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()), p=self.currentStrategy) if np.random.rand(
         ) > epsilon else np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()))
 
+
 class NashQLearningObserver:
     def update(self, history: History, NashQRewards) -> None:
         pass
 
 
-class NashQLearning :
+class NashQLearning:
     def __init__(self, environment: Environment):
 
         self.env = environment
@@ -93,13 +92,13 @@ class NashQLearning :
 
         self.widget = NashQLearningWidgets(self)
 
-        #self.env.attach(self)
+        # self.env.attach(self)
 
     # NashQ learning algorithm for n players
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset=False, goal_state=None, startingState=None):
-        
+
         self.prepareFunctions()
-        
+
         # reset the values of the loading bar
         self.widget.gamesLoadingBarNashQ.value = 0
 
@@ -164,11 +163,10 @@ class NashQLearning :
                 # memorize the new qTable
                 history_element.add(('Q'+str(agent.number)),
                                     agent.QtableForHistory())  # .copy())
-                
+
                 # memorize the agent's policy
                 newStrategy = self.computeNashEq(currentState, agent.Qtable())
                 policy.append(newStrategy)
-                
 
                 # memorize the difference between the old and the new value in the qTable
                 self.diffs[agent.number].append(self.diffQTable(
@@ -223,7 +221,7 @@ class NashQLearning :
             self.updateQTable = self.updateQTable4
         else:
             Exception("The number of players must be 2, 3 or 4")
-    
+
     def startLearning(self):
         self.nashQlearning(self.alfa, self.gamma, self.epsilon, self.pure_training_ep,
                            self.decaying_epsilon, self.reset, self.goal_state, self.startingState)
@@ -265,7 +263,7 @@ class NashQLearning :
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
             tmp.append(x)
-        
+
         for i in range(self.env.NPlayers):
             for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
                 tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
@@ -275,7 +273,7 @@ class NashQLearning :
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
         return e
-    
+
     def threePlNashEq(self, state: Game, qTable: QTable):
         payoff_matrix = qTable.getQTable()[self.env.getGameIndex(state)]
         # if the equilibrium has already been computed return it
@@ -322,7 +320,7 @@ class NashQLearning :
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
             tmp.append(x)
-        
+
         for i in range(self.env.NPlayers):
             for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
                 tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
@@ -351,7 +349,7 @@ class NashQLearning :
         if self.env.NPlayers == 2:
             return np.dot(player_strategies[1], np.dot(player_strategies[0], payoff_matrix))
         elif self.env.NPlayers == 3:
-            return np.dot(player_strategies[2],np.dot(player_strategies[0], np.dot(player_strategies[1], payoff_matrix)))
+            return np.dot(player_strategies[2], np.dot(player_strategies[0], np.dot(player_strategies[1], payoff_matrix)))
         elif self.env.NPlayers == 4:
             return np.dot(player_strategies[3], np.dot(player_strategies[0], np.dot(player_strategies[1], np.dot(player_strategies[2], payoff_matrix))))
         else:
@@ -381,7 +379,7 @@ class NashQLearning :
         if self.env.NPlayers > 4:
             raise Exception("The number of players must be 2, 3 or 4")
         return qTable[self.env.getGameIndex(state)][tuple(actions)].copy()
-    
+
     # state must be dereferenced earlier than the other dimensions, being the qtable a dictionary qtable[state][...]...
 
     def updateQTable2(self, qTable: QTable, actions: np.array, alfa: float, gamma: float, r: np.array, next_qVal: np.array):
@@ -414,7 +412,7 @@ class NashQLearning :
 
     def attach(self, observer: NashQLearningObserver):
         self.observers.append(observer)
-        if (self.history != None and self.NashQRewards != None and self.NashQRewards != []) :
+        if (self.history != None and self.NashQRewards != None and self.NashQRewards != []):
             observer.update(self.history, self.NashQRewards)
 
     def detach(self, observer: NashQLearningObserver):
@@ -430,7 +428,7 @@ class NashQLearning :
 
     def getWidget(self):
         return self.widget
-    
+
     # def updateEnv(self, env: Environment):
     #     self.env = env
     #     self.widget.updateGames()
@@ -570,7 +568,7 @@ class NashQLearningWidgets (GamesNObserver):
                               self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget,
                               self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget,
                               self.startButton, self.gamesLoadingBarNashQ, self.endLabel]
-        
+
         nashQLearning.env.attachGameObserver(self)
 
     def notifyEnd(self):
@@ -579,7 +577,7 @@ class NashQLearningWidgets (GamesNObserver):
     # start the NashQ learning algorithm on button click
     def start(self, b):
         self.endLabel.value = ""
-        if(self.verifyIfSWellSet()):
+        if (self.verifyIfSWellSet()):
             self.nashQlearning.startLearning()
 
     def setEpsilon(self, epsilon: float):
@@ -632,10 +630,11 @@ class NashQLearningWidgets (GamesNObserver):
             return False
         for g in self.nashQlearning.env.getGames():
             if g.getPossibleActions() == []:
-                self.endLabel.value = "No possible actions set in game "+str(self.nashQlearning.env.getGameIndex(g))
+                self.endLabel.value = "No possible actions set in game " + \
+                    str(self.nashQlearning.env.getGameIndex(g))
                 return False
             for actionProfile in g.getAllActionProfiles():
-                #TODO sistemare
+                # TODO sistemare
                 # found = False
                 # for nextGame in self.nashQlearning.env.getGames():
                 #     if (self.nashQlearning.env.transitionProfile(actionProfile, g).getProbability(nextGame) != 0):
@@ -644,11 +643,11 @@ class NashQLearningWidgets (GamesNObserver):
                 # if not found:
                 #     self.endLabel.value = "No transitions set in game "+str(self.nashQlearning.env.getGameIndex(g))+" for action profile "+str(actionProfile)
                 #     return False
-                
+
                 if g.getPayoff(actionProfile) == []:
-                    self.endLabel.value = "No payoffs set in game "+str(self.nashQlearning.env.getGameIndex(g))
+                    self.endLabel.value = "No payoffs set in game " + \
+                        str(self.nashQlearning.env.getGameIndex(g))
                     return False
 
-                
         self.endLabel.value = ""
         return True

@@ -12,7 +12,7 @@ sys.path.append('../../')
 if True:
     import Interface.Classes.GraphClass as graphClass
     from Model.NashQLearning import NashQLearning, NashQLearningObserver
-    from Model.Environment import Environment
+    from Model.Environment import Environment, Game
     from Model.History import History
     from Interface.Classes.EnvGraphDisplay import EnvGraphDisplay
 
@@ -353,6 +353,53 @@ class FinalDisplay(NashQLearningObserver):
                     fromGame, toGame, action[1:], valueStr)
 
     def __setLabelsToPolicy(self):
+        self.graph.clearActionLabels()
+        for gameIndex in range(self.env.getNGames()):
+            localGameNum = self.gameNum
+            while self.history.get(localGameNum).get('current_state') != gameIndex and localGameNum > 0:
+                localGameNum -= 1
+
+            if localGameNum == 0:
+                continue
+
+            policy = self.history.get(localGameNum).get(
+                'policy')[self.targetPlayerOptions.value]
+
+            print(policy)
+
+            # Convert the list of lists into a list of numpy arrays
+            prob_arrays = [np.array(player_probs, dtype=np.float64)
+                           for player_probs in policy]
+
+            # Generate a grid of all possible action indices for each player
+            grids = np.meshgrid(*[np.arange(len(player_probs))
+                                for player_probs in policy], indexing='ij')
+
+            # Initialize the joint probability array with ones
+            joint_prob_shape = [len(player_probs) for player_probs in policy]
+            joint_prob_array = np.ones(joint_prob_shape, dtype=np.float64)
+
+            # Compute the joint probability by multiplying the probabilities of individual actions
+            for i, grid in enumerate(grids):
+                joint_prob_array *= prob_arrays[i][grid]
+
+            print(joint_prob_array)
+            print(np.sum(joint_prob_array))
+
+            game: Game = self.env.getGame(gameIndex)
+
+            actionProfiles = game.getAllActionProfiles()
+
+            for action in actionProfiles:
+                games, probs = game.getTransition(
+                    tuple(action)).getTransitions()
+                for g, p in zip(games, probs):
+                    print(action, g, p, joint_prob_array[tuple(action)])
+                    self.graph.setActionLabel(gameIndex, g, tuple(action), str(
+                        round(joint_prob_array[tuple(action)], 2)))
+
+            print(policy)
+
         pass
 
     def __updateGraphLabels(self):
