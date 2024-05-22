@@ -628,26 +628,27 @@ class NashQLearningWidgets (GamesNObserver):
         if self.nashQlearning.env.NPlayers == 0:
             self.endLabel.value = "No players set"
             return False
-        for g in self.nashQlearning.env.getGames():
-            if g.getPossibleActions() == []:
-                self.endLabel.value = "No possible actions set in game " + \
-                    str(self.nashQlearning.env.getGameIndex(g))
+        for game in self.nashQlearning.env.getGames():
+            if(game.getPossibleActions() == [] or game.getAllActionProfiles() == []):
+                self.endLabel.value = "No possible actions set in game "\
+                    +str(self.nashQlearning.env.getGameIndex(game))
                 return False
-            for actionProfile in g.getAllActionProfiles():
-                # TODO sistemare
-                # found = False
-                # for nextGame in self.nashQlearning.env.getGames():
-                #     if (self.nashQlearning.env.transitionProfile(actionProfile, g).getProbability(nextGame) != 0):
-                #         found = True
-                #         break
-                # if not found:
-                #     self.endLabel.value = "No transitions set in game "+str(self.nashQlearning.env.getGameIndex(g))+" for action profile "+str(actionProfile)
-                #     return False
 
-                if g.getPayoff(actionProfile) == []:
-                    self.endLabel.value = "No payoffs set in game " + \
-                        str(self.nashQlearning.env.getGameIndex(g))
-                    return False
+            actionProfiles = game.getAllActionProfiles()
 
+            found = False
+            for action in actionProfiles:
+                games, probs = game.getTransition(
+                    tuple(action)).getTransitions()
+                probs_list = list(probs)
+                for prob in probs_list:
+                    if float(prob) != 0:
+                        found = True
+                        break
+            
+            if not found:
+                self.endLabel.value = "No transitions set in game "\
+                    +str(self.nashQlearning.env.getGameIndex(game))
+                return False
         self.endLabel.value = ""
         return True

@@ -14,7 +14,7 @@ class TransitionProfile:
 
     def getTransitionsDict(self) -> dict:
         return self.transitions
-
+        
     def getProbability(self, nextGame) -> float:
         return self.transitions.get(nextGame, 0.0)
 
