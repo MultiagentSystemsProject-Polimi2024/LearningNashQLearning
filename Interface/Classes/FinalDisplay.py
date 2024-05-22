@@ -119,9 +119,40 @@ class FinalDisplay(NashQLearningObserver):
         self.qTableBox = widgets.VBox(
             [self.qTableSubTitle, self.qTableWidget])
 
+        # Create the options for the graph labels
+        self.labelOptions = {
+            'NashQTable': self.__setLabelsToQTable,
+            'NashQPolicy': self.__setLabelsToPolicy
+        }
+
+        self.graphLabelsOptions = widgets.Dropdown(
+            options=self.labelOptions.keys(),
+            value='NashQTable',
+            description='Graph Labels:',
+            style={'description_width': 'initial'},
+            layout=widgets.Layout(width='200px', height='20px')
+        )
+
+        self.graphLabelsOptions.observe(
+            lambda x: self.__updateLabelsAndPlot(), names='value')
+
+        self.targetPlayerOptions = widgets.Dropdown(
+            options=[i for i in range(env.NPlayers)],
+            value=0,
+            description='Q tabel of player:',
+            style={'description_width': 'initial'},
+            layout=widgets.Layout(width='200px', height='20px')
+        )
+
+        self.targetPlayerOptions.observe(
+            lambda x: self.__updateLabelsAndPlot(), names='value')
+
+        self.graphSettings = widgets.HBox(
+            [self.targetPlayerOptions, self.graphLabelsOptions])
+
         # Create the VBox containing all the widgets
         self.box = widgets.VBox(
-            [self.title, self.subTitle1,  self.window_slider, self.plotOut, self.sliderBox, self.graphOut, self.currentGame, self.actionProfileBox, self.payoffBox, self.qTableBox])
+            [self.title, self.subTitle1,  self.window_slider, self.plotOut, self.sliderBox, self.graphSettings, self.graphOut, self.currentGame, self.actionProfileBox, self.payoffBox, self.qTableBox])
 
         self.graph = graphClass.GraphClass()
         self.graph.create_graph(env)
@@ -160,6 +191,10 @@ class FinalDisplay(NashQLearningObserver):
         self.setPayoffDisplay(self.history.get(0).get('payoff'))
         self.setQTableDisplay(self.__getQTables())
         self.__plot_rewards(self.rewards)
+
+        self.targetPlayerOptions.options = [
+            i for i in range(self.env.NPlayers)]
+
         self.graph.create_graph(self.env)
         self.__plot_graph()
 
@@ -185,6 +220,8 @@ class FinalDisplay(NashQLearningObserver):
 
     def setQTableDisplay(self, qTables):
         if self.env.NPlayers > 2:
+            self.qTableWidget.children = [widgets.HTML(
+                value='<h3>Q-Tables in matrix form are not supported for more than 2 players. Please refer to the graph display for this information</h3>')]
             return
 
         print(np.array(qTables).shape)
@@ -284,8 +321,13 @@ class FinalDisplay(NashQLearningObserver):
             qTables.append(self.history.get(self.gameNum).get('Q' + str(i)))
         return qTables
 
-    def __updateGraphLabels(self):
-        qTable = self.history.get(self.gameNum).get('Q0')
+    def __setLabelsToQTable(self):
+        if self.gameNum != 0:
+            pastQTable = self.history.get(self.gameNum - 1).get(
+                'Q' + str(self.targetPlayerOptions.value))
+
+        qTable = self.history.get(self.gameNum).get(
+            'Q' + str(self.targetPlayerOptions.value))
         actionProfiles = np.ndenumerate(qTable.T[0].T)
         self.graph.clearActionLabels()
 
@@ -294,12 +336,31 @@ class FinalDisplay(NashQLearningObserver):
             toGames = self.env.getGame(fromGame).getTransition(
                 tuple(action[1:])).getTransitions()[0]
             value = qTable[action]
-            valueStr = str([round(v, 2) for v in value])
+
+            if self.gameNum != 0:
+                pastValue = pastQTable[action]
+                diff: np.array = value - pastValue
+
+                valueStr = str([round(v, 2) for v in pastValue])
+
+                if np.any(diff != 0):
+                    valueStr += ' + ' + str([round(v, 2) for v in diff])
+            else:
+                valueStr = str([round(v, 2) for v in value])
 
             for toGame in toGames:
                 self.graph.setActionLabel(
                     fromGame, toGame, action[1:], valueStr)
-        print("__updateGraphLabels - Action Labels: ", self.graph.actionLabels)
+
+    def __setLabelsToPolicy(self):
+        pass
+
+    def __updateGraphLabels(self):
+        self.labelOptions[self.graphLabelsOptions.value]()
+
+    def __updateLabelsAndPlot(self):
+        self.__updateGraphLabels()
+        self.__plot_graph()
 
     def __on_value_change(self, change):
         self.gameNum = int(change['new'])
