@@ -160,6 +160,8 @@ class FinalDisplay(NashQLearningObserver):
         self.setPayoffDisplay(self.history.get(0).get('payoff'))
         self.setQTableDisplay(self.__getQTables())
         self.__plot_rewards(self.rewards)
+        self.graph.create_graph(self.env)
+        self.__plot_graph()
 
     def setActionProfileDisplay(self, actionProfile):
         self.actionProfileWidget.children = []
@@ -285,6 +287,7 @@ class FinalDisplay(NashQLearningObserver):
     def __updateGraphLabels(self):
         qTable = self.history.get(self.gameNum).get('Q0')
         actionProfiles = np.ndenumerate(qTable.T[0].T)
+        self.graph.clearActionLabels()
 
         for action, _ in actionProfiles:
             fromGame = action[0]
@@ -296,6 +299,7 @@ class FinalDisplay(NashQLearningObserver):
             for toGame in toGames:
                 self.graph.setActionLabel(
                     fromGame, toGame, action[1:], valueStr)
+        print("__updateGraphLabels - Action Labels: ", self.graph.actionLabels)
 
     def __on_value_change(self, change):
         self.gameNum = int(change['new'])
