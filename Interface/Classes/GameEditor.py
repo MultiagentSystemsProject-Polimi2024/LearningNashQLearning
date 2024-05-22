@@ -432,6 +432,7 @@ class EnvironmentWidget(EnvironmentObserver):
         return self.globalActionDomainWidget.getPossibleActions()
 
     def updateEnv(self, env):
+        self.NPlayerWidget.value = env.NPlayers
         games = env.getGames()
         for _ in range(max(0, env.getNGames() - len(self.widgets))):
             self.widgets.append(GameEditor(games[len(self.widgets)]))
