@@ -407,6 +407,8 @@ class NashQLearning :
 
     def attach(self, observer: NashQLearningObserver):
         self.observers.append(observer)
+        if (self.history != None and self.NashQRewards != None and self.NashQRewards != []) :
+            observer.update(self.history, self.NashQRewards)
 
     def detach(self, observer: NashQLearningObserver):
         self.observers.remove(observer)

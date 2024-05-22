@@ -31,8 +31,6 @@ class FinalDisplay(NashQLearningObserver):
         # The game number
         self.gameNum = 0
 
-        nashQ.attach(self)
-
         # Create main title
         self.title = widgets.HTML(
             value="<h1>Training Display</h1>")
@@ -148,6 +146,8 @@ class FinalDisplay(NashQLearningObserver):
             self.plotAx.set_xlim(0, 1000)
             plt.tight_layout()
             plt.show()
+
+        nashQ.attach(self)
 
     def next(self):
         self.slider.set_trait(name='value', value=self.slider.value + 1)
