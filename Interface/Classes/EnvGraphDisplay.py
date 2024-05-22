@@ -86,8 +86,9 @@ class EnvGraphDisplay(EnvironmentObserver):
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
                 for g, p in zip(games, probs):
-                    self.graph.setActionLabel(
-                        gameId, g, tuple(action), f'{p:.2f}')
+                    if (p > 0):
+                        self.graph.setActionLabel(
+                            gameId, g, tuple(action), f'{p:.2f}')
         # self.updateEnv(self.env)
 
     def setLabelsToPayoff(self):
