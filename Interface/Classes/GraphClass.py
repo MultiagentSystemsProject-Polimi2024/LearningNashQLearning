@@ -30,8 +30,6 @@ class GraphClass:
             # find all non empty indexes
             actionProfiles = game.getAllActionProfiles()
 
-            # self.actionEdgeMapping.clear()
-
             for action in actionProfiles:
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
@@ -42,12 +40,6 @@ class GraphClass:
                         self.setActionLabel(i, g, tuple(action), '')
 
                     self.graph.add_edge(i, g)
-                    # if self.edge_labels.get((i, g)) is None:
-                    #     self.edge_labels[(i, g)] = str(
-                    #         action) + ': ' + str(p)
-                    # else:
-                    #     self.edge_labels[(i, g)] += '\n' + \
-                    #         str(action) + ': ' + str(p)
 
         for node in list(self.graph.nodes):
             self.node_colors.update({node: 'blue'})
@@ -78,6 +70,9 @@ class GraphClass:
 
     def setActionLabel(self, fromGame, toGame, action, label):
         self.actionLabels.update({(fromGame, toGame, tuple([action])): label})
+
+    def clearActionLabels(self):
+        self.actionLabels.clear()
 
     def updateLabelsFromActionLabels(self):
         for (fgame, tgame, action), label in self.actionLabels.items():
