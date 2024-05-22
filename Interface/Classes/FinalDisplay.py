@@ -220,6 +220,8 @@ class FinalDisplay(NashQLearningObserver):
 
     def setQTableDisplay(self, qTables):
         if self.env.NPlayers > 2:
+            self.qTableWidget.children = [widgets.HTML(
+                value='<h3>Q-Tables in matrix form are not supported for more than 2 players. Please refer to the graph display for this information</h3>')]
             return
 
         print(np.array(qTables).shape)
