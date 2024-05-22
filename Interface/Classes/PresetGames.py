@@ -38,12 +38,6 @@ class PresetGames:
         games[1].setPayoff((0, 0), np.array([0, 0]))
         games[1].setTransition((0, 0), 0, 0)
         games[1].setPayoff((0, 0), np.array([0, 0]))
-
-
-        
-
-
-        
     
     def __firstSetup(self):
         env = self.env

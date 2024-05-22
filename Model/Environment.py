@@ -245,6 +245,9 @@ class Environment(GameObserver):
     def transitionProfile(self, actionProfile) -> TransitionProfile:
         return self.getCurrentGame().getTransition(actionProfile)
 
+    def transitionProfile(self, actionProfile, game: Game) -> TransitionProfile:
+        return self.game.getTransition(actionProfile)
+    
     def performAction(self, actionProfile) -> None:
         reward = self.reward(actionProfile)
         self.setCurrentGame(self.transitionProfile(

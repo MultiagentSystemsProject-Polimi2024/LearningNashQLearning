@@ -7,7 +7,7 @@ sys.path.append('../../')
 
 if True:
     from Model.History import History
-    from Model.Environment import Environment, Game, GamesNObserver, EnvironmentObserver
+    from Model.Environment import Environment, Game, GamesNObserver, EnvironmentObserver, TransitionProfile
 
 
 class QTable:
@@ -144,6 +144,7 @@ class NashQLearning :
             nextState = self.env.getNextState(actionProfile)
             currentState = self.env.getCurrentGame()
 
+            policy = []
             for agent in self.agents:
 
                 # compute the expected payoff for the next state
@@ -163,6 +164,11 @@ class NashQLearning :
                 # memorize the new qTable
                 history_element.add(('Q'+str(agent.number)),
                                     agent.QtableForHistory())  # .copy())
+                
+                # memorize the agent's policy
+                newStrategy = self.computeNashEq(currentState, agent.Qtable())
+                policy.append(newStrategy)
+                
 
                 # memorize the difference between the old and the new value in the qTable
                 self.diffs[agent.number].append(self.diffQTable(
@@ -179,7 +185,8 @@ class NashQLearning :
             # memorize the action profile
             history_element.add(
                 'action_profile', actionProfile)
-
+            # memorize the policy
+            history_element.add('policy', policy)
             # memorize the payoff
             history_element.add('payoff', r)
 
@@ -572,7 +579,8 @@ class NashQLearningWidgets (GamesNObserver):
     # start the NashQ learning algorithm on button click
     def start(self, b):
         self.endLabel.value = ""
-        self.nashQlearning.startLearning()
+        if(self.verifyIfSWellSet()):
+            self.nashQlearning.startLearning()
 
     def setEpsilon(self, epsilon: float):
         self.nashQlearning.epsilon = epsilon["new"]
@@ -613,3 +621,34 @@ class NashQLearningWidgets (GamesNObserver):
     def setEpisodes(self, episodes):
         self.nashQlearning.episodes = episodes["new"]
         self.gamesLoadingBarNashQ.max = self.nashQlearning.episodes-1
+
+    def verifyIfSWellSet(self):
+        self.endLabel.value = "verifying the env"
+        if self.nashQlearning.env.getGames() == []:
+            self.endLabel.value = "No games set"
+            return False
+        if self.nashQlearning.env.NPlayers == 0:
+            self.endLabel.value = "No players set"
+            return False
+        for g in self.nashQlearning.env.getGames():
+            if g.getPossibleActions() == []:
+                self.endLabel.value = "No possible actions set in game "+str(self.nashQlearning.env.getGameIndex(g))
+                return False
+            for actionProfile in g.getAllActionProfiles():
+                #TODO sistemare
+                # found = False
+                # for nextGame in self.nashQlearning.env.getGames():
+                #     if (self.nashQlearning.env.transitionProfile(actionProfile, g).getProbability(nextGame) != 0):
+                #         found = True
+                #         break
+                # if not found:
+                #     self.endLabel.value = "No transitions set in game "+str(self.nashQlearning.env.getGameIndex(g))+" for action profile "+str(actionProfile)
+                #     return False
+                
+                if g.getPayoff(actionProfile) == []:
+                    self.endLabel.value = "No payoffs set in game "+str(self.nashQlearning.env.getGameIndex(g))
+                    return False
+
+                
+        self.endLabel.value = ""
+        return True
