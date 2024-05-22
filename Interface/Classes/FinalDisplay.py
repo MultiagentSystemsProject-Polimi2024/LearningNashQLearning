@@ -320,6 +320,10 @@ class FinalDisplay(NashQLearningObserver):
         return qTables
 
     def __setLabelsToQTable(self):
+        if self.gameNum != 0:
+            pastQTable = self.history.get(self.gameNum - 1).get(
+                'Q' + str(self.targetPlayerOptions.value))
+
         qTable = self.history.get(self.gameNum).get(
             'Q' + str(self.targetPlayerOptions.value))
         actionProfiles = np.ndenumerate(qTable.T[0].T)
@@ -330,7 +334,17 @@ class FinalDisplay(NashQLearningObserver):
             toGames = self.env.getGame(fromGame).getTransition(
                 tuple(action[1:])).getTransitions()[0]
             value = qTable[action]
-            valueStr = str([round(v, 2) for v in value])
+
+            if self.gameNum != 0:
+                pastValue = pastQTable[action]
+                diff: np.array = value - pastValue
+
+                valueStr = str([round(v, 2) for v in pastValue])
+
+                if np.any(diff != 0):
+                    valueStr += ' + ' + str([round(v, 2) for v in diff])
+            else:
+                valueStr = str([round(v, 2) for v in value])
 
             for toGame in toGames:
                 self.graph.setActionLabel(
