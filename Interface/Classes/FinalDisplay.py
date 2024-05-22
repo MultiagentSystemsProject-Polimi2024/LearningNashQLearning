@@ -110,6 +110,15 @@ class FinalDisplay(NashQLearningObserver):
         self.payoffBox = widgets.VBox(
             [self.payoffWidgetSubTitle, self.payoffWidget])
 
+        # Create the current Policy widget
+        self.currentPolicyWidget = widgets.VBox()
+
+        self.currentPolicySubTitle = widgets.HTML(
+            value="<h3>Current Policy</h3>")
+
+        self.currentPolicyBox = widgets.VBox(
+            [self.currentPolicySubTitle, self.currentPolicyWidget])
+
         # Create the Q Table widget
         self.qTableWidget = widgets.Tab(value=0)
 
@@ -152,7 +161,7 @@ class FinalDisplay(NashQLearningObserver):
 
         # Create the VBox containing all the widgets
         self.box = widgets.VBox(
-            [self.title, self.subTitle1,  self.window_slider, self.plotOut, self.sliderBox, self.graphSettings, self.graphOut, self.currentGame, self.actionProfileBox, self.payoffBox, self.qTableBox])
+            [self.title, self.subTitle1,  self.window_slider, self.plotOut, self.sliderBox, self.graphSettings, self.graphOut, self.currentGame, self.actionProfileBox, self.payoffBox, self.currentPolicyBox, self.qTableBox])
 
         self.graph = graphClass.GraphClass()
         self.graph.create_graph(env)
@@ -190,6 +199,8 @@ class FinalDisplay(NashQLearningObserver):
         self.setActionProfileDisplay(self.history.get(0).get('action_profile'))
         self.setPayoffDisplay(self.history.get(0).get('payoff'))
         self.setQTableDisplay(self.__getQTables())
+        self.setCurrentPolicy(self.history.get(0).get(
+            'policy')[self.targetPlayerOptions.value])
         self.__plot_rewards(self.rewards)
 
         self.targetPlayerOptions.options = [
@@ -260,6 +271,24 @@ class FinalDisplay(NashQLearningObserver):
                         for m, qValue in enumerate(qCouple):
                             self.qTableWidget.children[i].children[j].children[k*len(qCouple) + l].children[m].value = str(
                                 qValue)
+
+    def setCurrentPolicy(self, policy):
+        print("setCurrent Polici, ", policy)
+        self.currentPolicyWidget.children = []
+        for i, playerPolicy in enumerate(policy):
+            playerPolicyWidget = widgets.HBox()
+            label = widgets.Label(value='Player ' + str(i) + ':')
+            for j, action in enumerate(playerPolicy):
+                playerPolicyWidget.children += (
+                    widgets.Text(value=str(round(action, 3)), description='Action ' + str(j) + ':', disabled=True),)
+            self.currentPolicyWidget.children += (label,)
+            self.currentPolicyWidget.children += (playerPolicyWidget,)
+
+    def updateCurrentPolicy(self, policy):
+        for i, playerPolicy in enumerate(policy):
+            for j, action in enumerate(playerPolicy):
+                self.currentPolicyWidget.children[i].children[j].value = str(
+                    round(action, 3))
 
     def __plot_rewards(self, rewards):
 
@@ -365,8 +394,6 @@ class FinalDisplay(NashQLearningObserver):
             policy = self.history.get(localGameNum).get(
                 'policy')[self.targetPlayerOptions.value]
 
-            print(policy)
-
             # Convert the list of lists into a list of numpy arrays
             prob_arrays = [np.array(player_probs, dtype=np.float64)
                            for player_probs in policy]
@@ -383,9 +410,6 @@ class FinalDisplay(NashQLearningObserver):
             for i, grid in enumerate(grids):
                 joint_prob_array *= prob_arrays[i][grid]
 
-            print(joint_prob_array)
-            print(np.sum(joint_prob_array))
-
             game: Game = self.env.getGame(gameIndex)
 
             actionProfiles = game.getAllActionProfiles()
@@ -394,12 +418,8 @@ class FinalDisplay(NashQLearningObserver):
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
                 for g, p in zip(games, probs):
-                    print(action, g, p, joint_prob_array[tuple(action)])
                     self.graph.setActionLabel(gameIndex, g, tuple(action), str(
                         round(joint_prob_array[tuple(action)], 2)))
-
-            print(policy)
-
         pass
 
     def __updateGraphLabels(self):
@@ -430,6 +450,9 @@ class FinalDisplay(NashQLearningObserver):
             self.history.get(self.gameNum).get('payoff'))
 
         self.updateQTableDisplay(self.__getQTables())
+
+        self.updateCurrentPolicy(
+            self.history.get(self.gameNum).get('policy')[self.targetPlayerOptions.value])
 
     def setWindow(self, windowPercentage: int):
         self.windowPercentage = windowPercentage
