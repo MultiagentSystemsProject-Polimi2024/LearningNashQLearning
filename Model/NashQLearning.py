@@ -96,7 +96,6 @@ class NashQLearning:
 
     # NashQ learning algorithm for n players
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset=False, goal_state=None, startingState=None):
-
         self.prepareFunctions()
 
         # reset the values of the loading bar
@@ -264,10 +263,12 @@ class NashQLearning:
         for i in range(self.env.NPlayers):
             x = np.zeros(state.getPossibleActions()[i])
             tmp.append(x)
-
-        for i in range(self.env.NPlayers):
-            for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+        
+        i = 0
+        for p in game.players:
+            for j in range(state.getPossibleActions()[i]):
+                tmp[i][j] = (float(eq[p][str(j+1)]))#TODO la cazzimma sta qui!
+            i += 1
 
         e = np.array(tmp, dtype=object)
 
@@ -281,7 +282,6 @@ class NashQLearning:
         if self.getKey(state, payoff_matrix) in self.__already_seen_equilibria.keys():
             return self.__already_seen_equilibria[self.getKey(state, payoff_matrix)]
 
-        state = self.env.getCurrentGame()
         game = pg.Game.from_arrays(payoff_matrix[:, :, :, 0], payoff_matrix[:, :, :, 1],
                                    payoff_matrix[:, :, :, 2], title=("gambe number"+str(state)))
         # compute the Nash Equilibrium
@@ -294,9 +294,11 @@ class NashQLearning:
             x = np.zeros(state.getPossibleActions()[i])
             tmp.append(x)
 
-        for i in range(self.env.NPlayers):
-            for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+        i = 0
+        for p in game.players:
+            for j in range(state.getPossibleActions()[i]):
+                tmp[i][j] = (float(eq[p][str(j+1)]))
+            i += 1
 
         e = np.array(tmp, dtype=object)
 
@@ -309,7 +311,6 @@ class NashQLearning:
         if self.getKey(state, payoff_matrix) in self.__already_seen_equilibria.keys():
             return self.__already_seen_equilibria[self.getKey(state, payoff_matrix)]
 
-        state = self.env.getCurrentGame()
         game = pg.Game.from_arrays(payoff_matrix[:, :, :, :, 0], payoff_matrix[:, :, :, :, 1],
                                    payoff_matrix[:, :, :, :, 2], payoff_matrix[:, :, :, :, 3], title=("gambe number"+str(state)))
         # compute the Nash Equilibrium
@@ -322,9 +323,11 @@ class NashQLearning:
             x = np.zeros(state.getPossibleActions()[i])
             tmp.append(x)
 
-        for i in range(self.env.NPlayers):
-            for j in range(self.env.getCurrentGame().getPossibleActions()[i]):
-                tmp[i][j] = (float(eq[str(i+1)][str(j+1)]))
+        i = 0
+        for p in game.players:
+            for j in range(state.getPossibleActions()[i]):
+                tmp[i][j] = (float(eq[p][str(j+1)]))
+            i += 1
 
         e = np.array(tmp, dtype=object)
 

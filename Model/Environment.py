@@ -259,7 +259,6 @@ class Environment(GameObserver):
 
     def setNPlayers(self, nPlayers: int = 2):
         self.NPlayers = nPlayers
-
         for g in self.Games:
             g.setNPlayers(nPlayers)
         self.notify()
