@@ -258,6 +258,7 @@ class NashQLearning:
         eq = pg.nash.enummixed_solve(game).equilibria
         # normalize the equilibrium
         eq = eq[0].normalize()
+
         # convert the Nash Equilibrium to an array
         tmp = []
         for i in range(self.env.NPlayers):
