@@ -38,8 +38,7 @@ class GraphClass:
                     p = round(p, 3)
                     if p > 0:
                         self.setActionLabel(i, g, tuple(action), '')
-
-                    self.graph.add_edge(i, g)
+                        self.graph.add_edge(i, g)
 
         for node in list(self.graph.nodes):
             self.node_colors.update({node: 'blue'})

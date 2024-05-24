@@ -98,11 +98,12 @@ class EnvGraphDisplay(EnvironmentObserver):
                 games, probs = game.getTransition(
                     tuple(action)).getTransitions()
                 for g, p in zip(games, probs):
-                    label = ''
-                    for i, payoff in enumerate(payoffs):
-                        label += f'{payoff:.2f} '
-                    self.graph.setActionLabel(
-                        gameId, g, tuple(action), label)
+                    if (p > 0):
+                        label = ''
+                        for i, payoff in enumerate(payoffs):
+                            label += f'{payoff:.2f} '
+                        self.graph.setActionLabel(
+                            gameId, g, tuple(action), label)
         # self.updateEnv(self.env)
 
     def countdown(self):
