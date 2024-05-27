@@ -297,13 +297,6 @@ class PresetGames:
         ################Game 0####################
         games[0].setPossibleActions(np.array([2, 2]))
 
-        for i in range(2):
-            for j in range(2):
-                games[0].setTransition((i, j), 0, 0)
-                games[0].setTransition((i, j), 1, 0)
-                games[0].setTransition((i, j), 2, 0)
-                games[0].setTransition((i, j), 3, 0)
-    
         games[0].setTransition((0, 0), 1, 1)
         games[0].setPayoff((0, 0), np.array([-5,-5]))
 
@@ -318,13 +311,6 @@ class PresetGames:
 
         ################Game 1####################
         games[1].setPossibleActions(np.array([3, 3]))
-
-        for i in range(3):
-            for j in range(3):
-                games[1].setTransition((i, j), 0, 0)
-                games[1].setTransition((i, j), 1, 0)
-                games[1].setTransition((i, j), 2, 0)
-                games[1].setTransition((i, j), 3, 0)
 
         games[1].setTransition((0, 0), 1, 1)
         games[1].setPayoff((0, 0), np.array([-1,-1]))
@@ -356,13 +342,6 @@ class PresetGames:
         ################Game 2####################
         games[2].setPossibleActions(np.array([2, 2]))
 
-        for i in range(2):
-            for j in range(2):
-                games[2].setTransition((i, j), 0, 0)
-                games[2].setTransition((i, j), 1, 0)
-                games[2].setTransition((i, j), 2, 0)
-                games[2].setTransition((i, j), 3, 0)
-
         games[2].setTransition((0, 0), 0, 1)
         games[2].setPayoff((0, 0), np.array([1,1]))
 
@@ -377,13 +356,6 @@ class PresetGames:
 
         ################Game 3####################
         games[3].setPossibleActions(np.array([2, 2]))
-
-        for i in range(2):
-            for j in range(2):
-                games[3].setTransition((i, j), 0, 0)
-                games[3].setTransition((i, j), 1, 0)
-                games[3].setTransition((i, j), 2, 0)
-                games[3].setTransition((i, j), 3, 0)
 
         games[3].setTransition((0, 0), 0, 1)
         games[3].setPayoff((0, 0), np.array([1,1]))
