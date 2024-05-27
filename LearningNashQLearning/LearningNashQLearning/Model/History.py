@@ -1,3 +1,5 @@
+# This class is used to log the situation of the game at each step, so that it can be used to analyze the game later on
+# For each training episode, it saves the current game, the action taken by the agents and the rewards received, the current Q-Tables of the agents and the current policy that the agents use to select their actions
 class History:
     def __init__(self):
         self.history = {}

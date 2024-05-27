@@ -1,3 +1,4 @@
+# this class actually implements the Nash-Q Learning algorithm, by having the agents chose their actions, based on the current policy, and by updating the Q-tables, from the class QTable, associated to the players after every action
 import numpy as np
 import pygambit as pg
 import ipywidgets as widgets

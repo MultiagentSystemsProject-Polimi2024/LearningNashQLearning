@@ -1,3 +1,5 @@
+# This class is used to represent and store information about the environment in which the agents interact
+# It stores information about the games, as elements of the class Game, and the possible transitions between them, as elements of the TransitionProfile class
 import numpy as np
 from typing import Type, NewType
 
