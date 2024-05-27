@@ -256,78 +256,78 @@ class PresetGames:
         env.setNPlayers(2)
         env.setNGames(4)
         games = env.getGames()
-
-        ################ Game 0####################
+            
+        ################Game 0####################
         games[0].setPossibleActions(np.array([2, 2]))
 
-        games[0].setTransition((0, 0), 0, 1)
-        games[0].setPayoff((0, 0), np.array([5, 5]))
+        games[0].setTransition((0, 0), 1, 1)
+        games[0].setPayoff((0, 0), np.array([-5,-5]))
 
         games[0].setTransition((0, 1), 2, 1)
-        games[0].setPayoff((0, 1), np.array([-10, 5]))
+        games[0].setPayoff((0, 1), np.array([1,-10]))
 
         games[0].setTransition((1, 0), 3, 1)
-        games[0].setPayoff((1, 0), np.array([5, -10]))
+        games[0].setPayoff((1, 0), np.array([-10,1]))
 
         games[0].setTransition((1, 1), 1, 1)
-        games[0].setPayoff((1, 1), np.array([-1, -1]))
+        games[0].setPayoff((1, 1), np.array([-1,-1]))
 
-        ################ Game 1####################
+        ################Game 1####################
         games[1].setPossibleActions(np.array([3, 3]))
 
         games[1].setTransition((0, 0), 1, 1)
-        games[1].setPayoff((0, 0), np.array([-1, -1]))
+        games[1].setPayoff((0, 0), np.array([-1,-1]))
 
-        games[1].setTransition((0, 1), 2, 1)
-        games[1].setPayoff((0, 1), np.array([-2, 1]))
+        games[1].setTransition((0, 1), 3, 1)
+        games[1].setPayoff((0, 1), np.array([-2,1]))
 
-        games[1].setTransition((0, 2), 3, 1)
-        games[1].setPayoff((0, 2), np.array([1, -2]))
+        games[1].setTransition((0, 2), 2, 1)
+        games[1].setPayoff((0, 2), np.array([1,-2]))
 
-        games[1].setTransition((1, 0), 3, 1)
-        games[1].setPayoff((1, 0), np.array([1, -2]))
+        games[1].setTransition((1, 0), 2, 1)
+        games[1].setPayoff((1, 0), np.array([1,-2]))
 
         games[1].setTransition((1, 1), 1, 1)
-        games[1].setPayoff((1, 1), np.array([-1, -1]))
+        games[1].setPayoff((1, 1), np.array([-1,-1]))
 
-        games[1].setTransition((1, 2), 2, 1)
-        games[1].setPayoff((1, 2), np.array([-2, 1]))
+        games[1].setTransition((1, 2), 3, 1)
+        games[1].setPayoff((1, 2), np.array([-2,1]))
 
-        games[1].setTransition((2, 0), 2, 1)
-        games[1].setPayoff((2, 0), np.array([-2, 1]))
-
-        games[1].setTransition((2, 1), 3, 1)
-        games[1].setPayoff((2, 1), np.array([1, -2]))
+        games[1].setTransition((2, 0), 3, 1)
+        games[1].setPayoff((2, 0), np.array([-2,1]))
+        
+        games[1].setTransition((2, 1), 2, 1)
+        games[1].setPayoff((2, 1), np.array([1,-2]))
 
         games[1].setTransition((2, 2), 1, 1)
-        games[1].setPayoff((2, 2), np.array([-1, -1]))
+        games[1].setPayoff((2, 2), np.array([-1,-1]))
 
-        ################ Game 2####################
+        ################Game 2####################
         games[2].setPossibleActions(np.array([2, 2]))
 
         games[2].setTransition((0, 0), 0, 1)
-        games[2].setPayoff((0, 0), np.array([1, 1]))
+        games[2].setPayoff((0, 0), np.array([1,1]))
 
-        games[2].setTransition((0, 1), 2, 1)
-        games[2].setPayoff((0, 1), np.array([-2, 0]))
+        games[2].setTransition((0, 1), 1, 1)
+        games[2].setPayoff((0, 1), np.array([-1,-2]))
 
-        games[2].setTransition((1, 0), 1, 1)
-        games[2].setPayoff((1, 0), np.array([-2, -1]))
+        games[2].setTransition((1, 0), 2, 1)
+        games[2].setPayoff((1, 0), np.array([0,-2]))
 
         games[2].setTransition((1, 1), 2, 1)
-        games[2].setPayoff((1, 1), np.array([-1, 0]))
+        games[2].setPayoff((1, 1), np.array([0,-1]))
 
-        ################ Game 3####################
+        ################Game 3####################
         games[3].setPossibleActions(np.array([2, 2]))
 
         games[3].setTransition((0, 0), 0, 1)
-        games[3].setPayoff((0, 0), np.array([1, 1]))
+        games[3].setPayoff((0, 0), np.array([1,1]))
 
-        games[3].setTransition((0, 1), 1, 1)
-        games[3].setPayoff((0, 1), np.array([-1, -2]))
+        games[3].setTransition((0, 1), 3, 1)
+        games[3].setPayoff((0, 1), np.array([-2,0]))
 
-        games[3].setTransition((1, 0), 3, 1)
-        games[3].setPayoff((1, 0), np.array([0, -2]))
+        games[3].setTransition((1, 0), 1, 1)
+        games[3].setPayoff((1, 0), np.array([-2,-1]))
 
         games[3].setTransition((1, 1), 3, 1)
-        games[3].setPayoff((1, 1), np.array([0, -1]))
+        games[3].setPayoff((1, 1), np.array([-1,0]))
