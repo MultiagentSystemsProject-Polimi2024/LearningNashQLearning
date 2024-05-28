@@ -1,5 +1,0 @@
-README.md
-LearningNashQLearning.egg-info/PKG-INFO
-LearningNashQLearning.egg-info/SOURCES.txt
-LearningNashQLearning.egg-info/dependency_links.txt
-LearningNashQLearning.egg-info/top_level.txt

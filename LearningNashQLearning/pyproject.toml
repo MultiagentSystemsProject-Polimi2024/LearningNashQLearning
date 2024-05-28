@@ -6,8 +6,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LearningNashQLearning"
-version = "0.1"
+version = "0.3"
 description = "A simple NashQ-learning implementation in Python"
 readme = "README.md"
 authors = [{ name = "Paolo Ginefra" }, { name = "Federico Rocca"}, { name = "Andrea Tarabotto" }]
 requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    'numpy',
+    'matplotlib',
+    'seaborn',
+    'networkx',
+    'pygambit',
+    'netgraph',
+    'ipywidgets',
+]
