@@ -258,7 +258,7 @@ class FinalDisplay(NashQLearningObserver):
                 for k, q in enumerate(game):
                     for l, qCouple in enumerate(q):
                         for m, qValue in enumerate(qCouple):
-                            self.qTableWidget.children[i].children[j].children[k*len(qCouple) + l].children[m].value = str(
+                            self.qTableWidget.children[i].children[j].children[k*len(q) + l].children[m].value = str(
                                 qValue)
 
     def setCurrentPolicy(self, policy):
