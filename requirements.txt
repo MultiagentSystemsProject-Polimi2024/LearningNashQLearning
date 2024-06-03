@@ -1,1 +1,1 @@
-LearningNashQLearning==0.4
+LearningNashQLearning==0.5
