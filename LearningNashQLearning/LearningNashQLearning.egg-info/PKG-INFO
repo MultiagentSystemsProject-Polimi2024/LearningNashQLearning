@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: LearningNashQLearning
-Version: 0.6
+Version: 0.7
 Summary: A simple NashQ-learning implementation in Python
 Author: Paolo Ginefra, Federico Rocca, Andrea Tarabotto
 Classifier: Programming Language :: Python :: 3

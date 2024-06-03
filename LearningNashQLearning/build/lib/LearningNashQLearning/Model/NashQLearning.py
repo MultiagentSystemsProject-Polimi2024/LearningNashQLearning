@@ -180,7 +180,7 @@ class NashQLearning:
                 # update the total reward of the player i
                 self.totalReward[agent.number] += r
                 # memorize the reward of the player i
-                self.NashQRewards[agent.number].append(r)
+                self.NashQRewards[agent.number].append(r[agent.number])
 
             # memorize the state
             history_element.add(
