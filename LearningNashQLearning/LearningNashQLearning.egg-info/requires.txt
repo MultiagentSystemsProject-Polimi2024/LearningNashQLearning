@@ -5,3 +5,5 @@ networkx
 pygambit
 netgraph
 ipywidgets
+notebook
+ipympl

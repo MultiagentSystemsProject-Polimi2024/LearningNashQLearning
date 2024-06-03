@@ -46,8 +46,8 @@ class GraphClass:
     def plotGraph(self, ax: plt.Axes, fig: plt.Figure):
         ax.clear()
         self.updateLabelsFromActionLabels()
-        Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=8), edge_layout='arc', node_size=10,
-              edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.3, edge_labels_rotate=False, edge_color=self.edge_colors)
+        plotInstance = Graph(self.graph, node_labels=True, node_layout='circular', edge_labels=self.edge_labels, edge_label_fontdict=dict(size=8), edge_layout='arc', node_size=10,
+                             edge_width=0.5, arrows=True, ax=ax, node_edge_color=self.node_colors, node_label_fontdict=dict(size=10), edge_label_position=0.3, edge_color=self.edge_colors)
         fig.canvas.draw()
         fig.canvas.flush_events()
 

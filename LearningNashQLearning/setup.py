@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='LearningNashQLearning',
-    version='0.5',
+    version='0.6',
     packages=find_packages(),
     description='A library for learning NashQ-learning',
     install_requires=[
@@ -13,5 +13,7 @@ setup(
         'pygambit',
         'netgraph',
         'ipywidgets',
+        'notebook',
+        'ipympl',
     ]
 )
