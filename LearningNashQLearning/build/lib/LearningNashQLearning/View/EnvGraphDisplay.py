@@ -54,13 +54,14 @@ class EnvGraphDisplay(EnvironmentObserver):
         self.labelOptionsDropdown.observe(
             lambda x: self.updateEnv(self.env), names='value')
 
-        self.out = widgets.Output()
-        self.box = widgets.VBox([self.labelOptionsDropdown, self.out])
+        with plt.ioff():
+            self.fig, self.ax = plt.subplots(figsize=(6, 6))
+            self.fig.canvas.layout.min_height = '400px'
+            self.fig.tight_layout()
+            self.ax.set_aspect('equal')
+            self.ax.axis('off')
 
-        with self.out:
-            fig, self.ax = plt.subplots()
-            self.ax.get_xaxis().set_visible(False)
-            self.ax.get_yaxis().set_visible(False)
+        self.box = widgets.VBox([self.labelOptionsDropdown, self.fig.canvas])
 
         self.updateEnv(env)
         self.update_graph()
@@ -110,8 +111,7 @@ class EnvGraphDisplay(EnvironmentObserver):
         self.graph = GraphClass()
         self.graph.create_graph(self.env)
         self.labelOptions[self.labelOptionsDropdown.value]()
-        self.ax.cla()
-        self.graph.plotGraph(self.ax)
+        self.graph.plotGraph(self.ax, self.fig)
 
     def get_widget(self):
         return self.box

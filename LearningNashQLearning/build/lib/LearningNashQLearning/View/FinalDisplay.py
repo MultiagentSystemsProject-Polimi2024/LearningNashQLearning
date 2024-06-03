@@ -150,33 +150,32 @@ class FinalDisplay(NashQLearningObserver):
         self.graphSettings = widgets.HBox(
             [self.targetPlayerOptions, self.graphLabelsOptions])
 
-        # Create the VBox containing all the widgets
-        self.box = widgets.VBox(
-            [self.title, self.subTitle1,  self.window_slider, self.plotOut, self.sliderBox, self.graphSettings, self.graphOut, self.currentGame, self.actionProfileBox, self.payoffBox, self.currentPolicyBox, self.qTableBox])
-
         self.graph = GraphClass()
         self.graph.create_graph(env)
         self.graph.current_state_set(0)
 
         # create figure and axes
-        with self.graphOut:
+        with plt.ioff():
             self.graphFig, self.graphAx = plt.subplots(figsize=(8, 8))
             self.graphFig.canvas.header_visible = False
             self.graphAx.set_title('')
             self.graphAx.get_xaxis().set_visible(False)
             self.graphAx.get_yaxis().set_visible(False)
-            self.graph.plotGraph(self.graphAx)
-            plt.tight_layout()
-            plt.show()
+            self.graph.plotGraph(self.graphAx, self.graphFig)
+            # plt.tight_layout()
 
-        with self.plotOut:
+        with plt.ioff():
             sns.set_theme()
             self.plotFig, self.plotAx = plt.subplots(figsize=(6, 3))
             self.plotFig.canvas.header_visible = False
             self.plotAx.set_title('Rewards during the training episodes')
             self.plotAx.set_xlim(0, 1000)
-            plt.tight_layout()
-            plt.show()
+            # plt.tight_layout()
+            # plt.show()
+
+        # Create the VBox containing all the widgets
+        self.box = widgets.VBox(
+            [self.title, self.subTitle1,  self.window_slider, self.plotFig.canvas, self.sliderBox, self.graphSettings, self.graphFig.canvas, self.currentGame, self.actionProfileBox, self.payoffBox, self.currentPolicyBox, self.qTableBox])
 
         nashQ.attach(self)
 
@@ -310,6 +309,8 @@ class FinalDisplay(NashQLearningObserver):
         self.line = self.plotAx.axvline(
             x=self.gameNum, color='r', linestyle='--', label='Current Game')
 
+        self.plotAx.figure.canvas.draw()
+
     def __smooth_rewards(self, rewards, window=100):
         if window == 0:
             return rewards, np.sum(rewards, axis=0)
@@ -330,7 +331,6 @@ class FinalDisplay(NashQLearningObserver):
         return rewardsPlayersSmooth, np.sum(rewardsPlayersSmooth, axis=0)
 
     def __plot_graph(self):
-        self.graphAx.clear()
         current_state = self.history.get(self.gameNum).get('current_state')
         self.graph.current_state_set(current_state)
 
@@ -338,7 +338,7 @@ class FinalDisplay(NashQLearningObserver):
             next_state = self.history.get(self.gameNum+1).get('current_state')
             self.graph.setCurrentActionProfile(current_state, next_state)
 
-        self.graph.plotGraph(self.graphAx)
+        self.graph.plotGraph(self.graphAx, self.graphFig)
 
     def __getQTables(self):
         qTables = []
