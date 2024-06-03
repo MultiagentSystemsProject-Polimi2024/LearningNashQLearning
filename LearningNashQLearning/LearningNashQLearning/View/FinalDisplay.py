@@ -184,7 +184,7 @@ class FinalDisplay(NashQLearningObserver):
 
     def update(self, gamesHistory: History, rewards):
         self.history = gamesHistory
-        self.rewards = np.array(rewards)[:, :, 0]
+        self.rewards = np.array(rewards)
         self.slider.max = len(self.rewards[0]) - 1
         self.setActionProfileDisplay(self.history.get(0).get('action_profile'))
         self.setPayoffDisplay(self.history.get(0).get('payoff'))
