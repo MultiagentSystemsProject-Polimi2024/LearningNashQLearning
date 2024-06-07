@@ -102,14 +102,14 @@ class NashQLearning:
 
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset=False, goal_state=None, startingState=None):
         """NashQ learning algorithm for n players. Parameters:\n
-            alfa: \n
-            gamma\n
-            epsilon\n
-            pure_training_ep\n
-            decaying_epsilon\n
-            reset\n
-            goal_state\n
-            starting_state\n"""
+            alfa: learning rate\n
+            gamma: discount factor\n
+            epsilon: randomicity\n
+            pure_training_ep: episodes for which the gamma value does not decrease\n
+            decaying_epsilon: episodes for which the alfa value does not decrease\n
+            reset: if true, every time the goal is reached the agent start again from the starting state\n
+            goal_state: the goal state, taken into consideration only if reset == true\n
+            starting_state: the starting state, taken into consideration only if reset == true\n"""
         self.prepareFunctions()
 
         # reset the values of the loading bar
