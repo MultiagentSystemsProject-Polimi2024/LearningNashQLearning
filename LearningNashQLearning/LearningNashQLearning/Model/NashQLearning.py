@@ -81,7 +81,7 @@ class NashQLearning:
     def __init__(self, environment: Environment):
 
         self.env = environment
-        self.episodes = 1
+        self.steps = 1
         self.epsilon = 0.1
         self.alfa = 0.5
         self.gamma = 0.8
@@ -105,8 +105,8 @@ class NashQLearning:
             alfa: learning rate\n
             gamma: discount factor\n
             epsilon: randomicity\n
-            pure_training_ep: episodes for which the gamma value does not decrease\n
-            decaying_epsilon: episodes for which the alfa value does not decrease\n
+            pure_training_ep: steps for which the gamma value does not decrease\n
+            decaying_epsilon: steps for which the alfa value does not decrease\n
             reset: if true, every time the goal is reached the agent start again from the starting state\n
             goal_state: the goal state, taken into consideration only if reset == true\n
             starting_state: the starting state, taken into consideration only if reset == true\n"""
@@ -136,7 +136,7 @@ class NashQLearning:
         self.NashQRewards = [[]for _ in range(n_players)]
         self.history = History()
 
-        for t in range(self.episodes):
+        for t in range(self.steps):
             history_element = History()
 
             alfa = alfa / \
@@ -204,8 +204,8 @@ class NashQLearning:
             # add the history element to the history
             self.history.add(t, history_element)
 
-            # notify the observers every 1000 episodes
-            # if t % min(100, self.episodes) == 0:
+            # notify the observers every 1000 steps
+            # if t % min(100, self.steps) == 0:
             #     self.notify(self.history, self.NashQRewards)
 
             # update the state
@@ -242,12 +242,12 @@ class NashQLearning:
         self.nashQlearning(self.alfa, self.gamma, self.epsilon, self.pure_training_ep,
                            self.decaying_epsilon, self.reset, self.goal_state, self.startingState)
 
-    def setEpisodes(self, episodes):
-        """setter for the number of players"""
-        self.episodes = episodes["new"]
+    def setSteps(self, steps):
+        """setter for the number of steps"""
+        self.steps = steps["new"]
 
     def playMove(self, nextState: Game) -> None:
-        """setter for the number of players"""
+        """plays the move to the next state"""
         self.env.setNextState(nextState)
         return
 
@@ -358,7 +358,6 @@ class NashQLearning:
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
         return e
-
     
     def reward(self, state, player_actions, reward_matrix):
         """Getting reward for a given state and actions.\n
@@ -384,8 +383,8 @@ class NashQLearning:
         else:
             Exception("The number of players must be 2, 3 or 4")
 
-    # getting the expected payoff in the future state for n players
     def getNextQVal(self, qTable: QTable, next_state: Game, strategies: np.array):
+        """getting the expected payoff in the future state for n players"""
         qTable = qTable.getQTable()
         next_qVal = np.zeros(self.env.NPlayers)
         for x in range(self.env.NPlayers):
@@ -482,11 +481,11 @@ class NashQLearningWidgets (GamesNObserver):
 
         self.resetWidget.observe(self.setReset, names='value')
 
-        # pure training episodes widget
+        # pure training steps widget
         self.pureTrainingEpWidget = widgets.IntText(
             value=self.nashQlearning.pure_training_ep,
             layout=widgets.Layout(width='50%'),
-            description='Pure training episodes:',
+            description='Pure training steps:',
             style={'description_width': 'initial'},
             disabled=False
         )
@@ -498,7 +497,7 @@ class NashQLearningWidgets (GamesNObserver):
         self.decayingEpsilonWidget = widgets.IntText(
             value=self.nashQlearning.decaying_epsilon,
             layout=widgets.Layout(width='50%'),
-            description='Pure epsilon episodes:',
+            description='Pure epsilon steps:',
             style={'description_width': 'initial'},
             disabled=False
         )
@@ -539,15 +538,15 @@ class NashQLearningWidgets (GamesNObserver):
 
         self.epsilonWidget.observe(self.setEpsilon, names='value')
 
-        # episodes widget
-        self.episodesWidget = widgets.IntText(
-            value=self.nashQlearning.episodes,
-            description='Episodes:',
+        # steps widget
+        self.stepsWidget = widgets.IntText(
+            value=self.nashQlearning.steps,
+            description='Steps:',
             disabled=False,
             min=1
         )
 
-        self.episodesWidget.observe(self.setEpisodes, names='value')
+        self.stepsWidget.observe(self.setSteps, names='value')
 
         # goal state widget
         self.goalStateWidget = widgets.Dropdown(
@@ -595,7 +594,7 @@ class NashQLearningWidgets (GamesNObserver):
             grid_template_rows='repeat(7, 1fr)',
             grid_gap='10px'
         ))
-        self.grid.children = [self.episodesWidget, self.gammaWidget, self.epsilonWidget,
+        self.grid.children = [self.stepsWidget, self.gammaWidget, self.epsilonWidget,
                               self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget,
                               self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget,
                               self.startButton, self.gamesLoadingBarNashQ, self.endLabel]
@@ -647,9 +646,9 @@ class NashQLearningWidgets (GamesNObserver):
         self.startingStateWidget.options = [
             (str(i), i) for i in range(len(self.nashQlearning.env.getGames()))]
 
-    def setEpisodes(self, episodes):
-        self.nashQlearning.episodes = episodes["new"]
-        self.gamesLoadingBarNashQ.max = self.nashQlearning.episodes-1
+    def setSteps(self, steps):
+        self.nashQlearning.steps = steps["new"]
+        self.gamesLoadingBarNashQ.max = self.nashQlearning.steps-1
 
     def verifyIfSWellSet(self):
         """verifies if the environment is well set for the learning process, if not it displays an error message and returns False, otherwise it returns True"""
