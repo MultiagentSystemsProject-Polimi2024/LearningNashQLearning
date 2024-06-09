@@ -1,7 +1,7 @@
 import ipywidgets as widgets
 import numpy as np
 from ..Model.Environment import GameObserver, TransitionProfile, EnvironmentObserver
-from IPython.display import clear_output
+from IPython.display import clear_output, display
 
 
 class ActionDomainsWidgets(GameObserver):
@@ -417,17 +417,23 @@ class EnvironmentWidget(EnvironmentObserver):
             self.globalActionDomainWidget.getWidget(),
             self.box
         ])
-        self.gameSelector = widgets.Dropdown(
-            options=[i for i in range(len(self.widgets))],
-            value= 0,
-            description='Game:',
+        # self.gameSelector = widgets.Dropdown(
+        #     options=[i for i in range(len(self.widgets))],
+        #     value= 0,
+        #     description='Game:',
+        # )
+
+        # self.gameSelector = widgets.Select(
+
+        self.gameSelector = widgets.IntSlider(
+            value=0,
+            min=0,
+            max=len(self.widgets)-1,
+            step=1,
+            description='Game:'
         )
-
         self.gameSelector.observe(lambda change: self.changeGameShowing(change.new), names='value')
-
-        # self.gameOutput = widgets.Output()
-        # self.gameOutput = self.widgets[0].getWidget()
-        self.output = widgets.Output()
+        self.gameOutput = self.widgets[0].getWidget()
 
     def getWidget(self):
         return self.widget
@@ -462,10 +468,9 @@ class EnvironmentWidget(EnvironmentObserver):
         # with self.gameOutput:
         #     clear_output()
         #     display(self.widgets[gameIndex].getWidget())
-        # self.gameOutput = self.widgets[gameIndex].getWidget()
-        with self.output:
-            clear_output()
-            self.output.append_display_data(self.widgets[gameIndex].getWidget())
+        self.gameOutput = self.widgets[gameIndex].getWidget()
+        clear_output()
+        display(self.getGameSelector)
 
 
 
@@ -478,4 +483,4 @@ class EnvironmentWidget(EnvironmentObserver):
             self.globalActionDomainWidget.getWidget()])
         
     def getGameSelector(self):
-        return widgets.VBox([self.gameSelector, self.output])
+        return widgets.VBox([self.gameSelector, self.gameOutput])
