@@ -455,6 +455,8 @@ class EnvironmentWidget(EnvironmentObserver):
 
         self.globalActionDomainWidget.setGames(games)
 
+        self.displayGameSelector()
+
     def changeGameShowing(self, gameIndex):
         self.gameOutput = self.widgets[gameIndex].getWidget()
         self.secondWidget.children = [self.gameSelector, self.gameOutput]
