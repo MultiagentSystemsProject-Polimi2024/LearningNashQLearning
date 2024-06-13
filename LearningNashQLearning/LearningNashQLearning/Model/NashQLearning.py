@@ -16,21 +16,21 @@ class QTable:
             self.table[environment.getGameIndex(
                 game)] = np.zeros(shape, dtype=object)
 
-    # get the Qtable
     def getQTable(self):
+        """returns the Qtable"""
         return self.table
 
-    # get the Qvalue for a given state, player and actions
     def getQvalue(self, state: Game, player: int, actions):
+        """gets the Qvalue for a given state, player and actions"""
         return self.table[state][actions, player]
 
-    # update the Qvalue for a given state, player and actions
     def updateQvalue(self, state: Game, player: int, actions, alfa: float, gamma: float, nextQval, reward):
+        """updates the Qvalue for a given state, player and actions"""
         self.table[state][actions, player] = (
             1 - alfa) * self.table[state][actions, player] + alfa * (reward + gamma * nextQval)
 
-    # convert the Qtable to a table
     def convertToTable(self):
+        """converts the Qtable to a table returning a np.array object"""
         converted = []
         for game in self.table.keys():
             converted.append(self.table[game].copy())
@@ -46,28 +46,28 @@ class Agent:
         self.currentAction = None
         self.currentStrategy = None
 
-    # set the current strategy of the agent
     def setCurrentStrategy(self, strategy: np.array):
+        """sets the current strategy of the agent"""
         self.currentStrategy = strategy
 
-    # get the possible actions for the agent
     def __getPossibleActions(self, state: Game):
+        """gets the possible actions for the agent"""
         return state.getPossibleActions()[self.number]
 
-    # get the Qtable for the agent
     def getQtable(self, state: Game):
+        """gets the Qtable for the agent"""
         return self.QTable.getQTable()[self.environment.getGameIndex(state)]
 
-   # get the Qtable for the agent
     def Qtable(self):
+        """get the Qtable for the agent"""
         return self.QTable
-
-    # get the Qtable for the agent
+    
     def QtableForHistory(self):
+        """gets the Qtable for the agent"""
         return self.QTable.convertToTable()
 
-    # choose the action for the agent
     def chooseAction(self, epsilon: float):
+        """chooses the action for the agent given an index of randomness"""
         self.currentAction = np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()), p=self.currentStrategy) if np.random.rand(
         ) > epsilon else np.random.choice(self.__getPossibleActions(self.environment.getCurrentGame()))
 
@@ -81,7 +81,7 @@ class NashQLearning:
     def __init__(self, environment: Environment):
 
         self.env = environment
-        self.episodes = 1
+        self.steps = 1
         self.epsilon = 0.1
         self.alfa = 0.5
         self.gamma = 0.8
@@ -100,8 +100,16 @@ class NashQLearning:
 
         # self.env.attach(self)
 
-    # NashQ learning algorithm for n players
     def nashQlearning(self, alfa, gamma, epsilon, pure_training_ep, decaying_epsilon, reset=False, goal_state=None, startingState=None):
+        """NashQ learning algorithm for n players. Parameters:\n
+            alfa: learning rate\n
+            gamma: discount factor\n
+            epsilon: randomicity\n
+            pure_training_ep: steps for which the gamma value does not decrease\n
+            decaying_epsilon: steps for which the alfa value does not decrease\n
+            reset: if true, every time the goal is reached the agent start again from the starting state\n
+            goal_state: the goal state, taken into consideration only if reset == true\n
+            starting_state: the starting state, taken into consideration only if reset == true\n"""
         self.prepareFunctions()
 
         # reset the values of the loading bar
@@ -128,7 +136,7 @@ class NashQLearning:
         self.NashQRewards = [[]for _ in range(n_players)]
         self.history = History()
 
-        for t in range(self.episodes):
+        for t in range(self.steps):
             history_element = History()
 
             alfa = alfa / \
@@ -196,8 +204,8 @@ class NashQLearning:
             # add the history element to the history
             self.history.add(t, history_element)
 
-            # notify the observers every 1000 episodes
-            # if t % min(100, self.episodes) == 0:
+            # notify the observers every 1000 steps
+            # if t % min(100, self.steps) == 0:
             #     self.notify(self.history, self.NashQRewards)
 
             # update the state
@@ -213,8 +221,9 @@ class NashQLearning:
         self.widget.notifyEnd()
         return self.totalReward, self.diffs, self.NashQRewards, self.history
 
-    # prepare the functions for the nash equilibria computation and the qTable update
+
     def prepareFunctions(self):
+        """prepares the functions for the nash equilibria computation and the qTable update"""
         # decide strategy for nash equilibria computation
         if self.env.NPlayers == 2:
             self.computeNashEq = self.twoPlNashEq
@@ -228,35 +237,35 @@ class NashQLearning:
         else:
             Exception("The number of players must be 2, 3 or 4")
 
-    # start the learning process
     def startLearning(self):
+        """starts the learning process"""
         self.nashQlearning(self.alfa, self.gamma, self.epsilon, self.pure_training_ep,
                            self.decaying_epsilon, self.reset, self.goal_state, self.startingState)
 
-    # setter for the number of players
-    def setEpisodes(self, episodes):
-        self.episodes = episodes["new"]
+    def setSteps(self, steps):
+        """setter for the number of steps"""
+        self.steps = steps["new"]
 
-    # setter for the number of players
     def playMove(self, nextState: Game) -> None:
+        """plays the move to the next state"""
         self.env.setNextState(nextState)
         return
 
-    # convert the qTable to a tuple
     def qTable_to_tuple(self, qTable: np.array):
+        """converts the qTable to a tuple"""
         try:
             return tuple(self.qTable_to_tuple(subarray) for subarray in qTable)
         except TypeError:
             return qTable
 
-    # get the key for the qTable
     def getKey(self, state: Game, table: np.array):
+        """gets the key for the qTable"""
         s = self.env.getGameIndex(state)
         t = self.qTable_to_tuple(table)
         return (s, t)
 
-    # compute the Nash Equilibrium for a 2 players game
     def twoPlNashEq(self, state: Game, qTable: QTable):
+        """computes the Nash Equilibrium for a 2 players game"""
 
         payoff_matrix = qTable.getQTable()[self.env.getGameIndex(state)]
         # if the equilibrium has already been computed return it
@@ -289,8 +298,8 @@ class NashQLearning:
 
         return e
 
-    # compute the Nash Equilibrium for a 3 players game
     def threePlNashEq(self, state: Game, qTable: QTable):
+        """computes the Nash Equilibrium for a 3 players game"""
         payoff_matrix = qTable.getQTable()[self.env.getGameIndex(state)]
         # if the equilibrium has already been computed return it
         if self.getKey(state, payoff_matrix) in self.__already_seen_equilibria.keys():
@@ -320,8 +329,8 @@ class NashQLearning:
 
         return e
 
-    # compute the Nash Equilibrium for a 4 players game
     def fourPlNashEq(self, state: Game, qTable: QTable):
+        """compute the Nash Equilibrium for a 4 players game"""
         payoff_matrix = qTable.getQTable()[self.env.getGameIndex(state)]
         if self.getKey(state, payoff_matrix) in self.__already_seen_equilibria.keys():
             return self.__already_seen_equilibria[self.getKey(state, payoff_matrix)]
@@ -349,10 +358,10 @@ class NashQLearning:
         self.__already_seen_equilibria[self.getKey(state, payoff_matrix)] = e
 
         return e
-
-    # getting reward for a given state and actions, the arguments must be
-    # reward_matrix, state, player1_action, player2_action, player3_action(optional)
+    
     def reward(self, state, player_actions, reward_matrix):
+        """Getting reward for a given state and actions.\n
+        The arguments must be reward_matrix, state, player1_action, player2_action, player3_action(optional)"""
         if self.n_players == 2:
             return reward_matrix[state, player_actions[0], player_actions[1]]
         elif self.n_players == 3:
@@ -362,9 +371,9 @@ class NashQLearning:
         else:
             Exception("The number of players must be 2, 3 or 4")
 
-    # getting the expected payoff in the future state the arguments must be
-    # player1_strategy, player2_strategy, payoff_matrix
     def expectedPayoff(self, payoff_matrix, player_strategies):
+        """Getting the expected payoff in the future state.\n
+        The arguments must be player1_strategy, player2_strategy, payoff_matrix"""
         if self.env.NPlayers == 2:
             return np.dot(player_strategies[1], np.dot(player_strategies[0], payoff_matrix))
         elif self.env.NPlayers == 3:
@@ -374,8 +383,8 @@ class NashQLearning:
         else:
             Exception("The number of players must be 2, 3 or 4")
 
-    # getting the expected payoff in the future state for n players
     def getNextQVal(self, qTable: QTable, next_state: Game, strategies: np.array):
+        """getting the expected payoff in the future state for n players"""
         qTable = qTable.getQTable()
         next_qVal = np.zeros(self.env.NPlayers)
         for x in range(self.env.NPlayers):
@@ -392,8 +401,8 @@ class NashQLearning:
                 Exception("The number of players must be 2, 3 or 4")
         return next_qVal
 
-    # return a copy of the qTable in the state "state"
     def copyQTable(self, qTable: QTable, state: Game, actions):
+        """Returns a copy of the qTable in the state \"state\""""
         qTable = qTable.getQTable()
         if self.env.NPlayers > 4:
             raise Exception("The number of players must be 2, 3 or 4")
@@ -401,57 +410,57 @@ class NashQLearning:
 
     # state must be dereferenced earlier than the other dimensions, being the qtable a dictionary qtable[state][...]...
 
-    # update the qTable for 2 players
     def updateQTable2(self, qTable: QTable, actions: np.array, alfa: float, gamma: float, r: np.array, next_qVal: np.array):
+        """updates the qTable for 2 players"""
         state = self.env.getCurrentGame()
         qTable = qTable.getQTable()
         for x in range(self.env.NPlayers):
             qTable[self.env.getGameIndex(state)][actions[0], actions[1], x] = (
                 1 - alfa) * qTable[self.env.getGameIndex(state)][actions[0], actions[1], x] + alfa * (r[x] + gamma * next_qVal[x])
-
-    # update the qTable for 3 players
+            
     def updateQTable3(self, qTable: QTable, actions: np.array, alfa: float, gamma: float, r: np.array, next_qVal: np.array):
+        """updates the qTable for 3 players"""
         state = self.env.getCurrentGame()
         qTable = qTable.getQTable()
         for x in range(self.env.NPlayers):
             qTable[self.env.getGameIndex(state)][actions[0], actions[1], actions[2], x] = (
                 1 - alfa) * qTable[self.env.getGameIndex(state)][actions[0], actions[1], actions[2], x] + alfa * (r[x] + gamma * next_qVal[x])
 
-    # update the qTable for 4 players
     def updateQTable4(self, qTable: QTable, actions: np.array, alfa: float, gamma: float, r: np.array, next_qVal: np.array):
+        """update the qTable for 4 players"""
         state = self.env.getCurrentGame()
         qTable = qTable.getQTable()
         for x in range(self.env.NPlayers):
             qTable[self.env.getGameIndex(state)][actions[0], actions[1], actions[2], actions[3], x] = (
                 1 - alfa) * qTable[self.env.getGameIndex(state)][actions[0], actions[1], actions[2], actions[3], x] + alfa * (r[x] + gamma * next_qVal[x])
 
-    # returns the difference between the two qTables
     def diffQTable(self, newTable: np.array, oldTable: np.array, actions: np.array):
+        """returns the difference between the two qTables"""
         if self.env.NPlayers > 4:
             raise Exception("The number of players must be 2, 3 or 4")
         return newTable[tuple(actions)] - oldTable
 
-    # attach an observer to the NashQLearning
     def attach(self, observer: NashQLearningObserver):
+        """attaches an observer to the NashQLearning"""
         self.observers.append(observer)
         if (self.history != None and self.NashQRewards != None and self.NashQRewards != []):
             observer.update(self.history, self.NashQRewards)
 
-    # detach an observer from the NashQLearning
     def detach(self, observer: NashQLearningObserver):
+        """detaches an observer from the NashQLearning"""
         self.observers.remove(observer)
 
-    # notify the observers
     def notify(self, history: History, NashQRewards):
+        """notifies the observers of the NashQLearning"""
         for observer in self.observers:
             observer.update(history, NashQRewards)
 
-    # returns the widgets
     def getDisplayable(self):
+        """returns the widgets"""
         return self.widget.getDisplayable()
 
-    # returns the widget
     def getWidget(self):
+        """returns the widget"""
         return self.widget
 
 
@@ -472,11 +481,11 @@ class NashQLearningWidgets (GamesNObserver):
 
         self.resetWidget.observe(self.setReset, names='value')
 
-        # pure training episodes widget
+        # pure training steps widget
         self.pureTrainingEpWidget = widgets.IntText(
             value=self.nashQlearning.pure_training_ep,
             layout=widgets.Layout(width='50%'),
-            description='Pure training episodes:',
+            description='Pure training steps:',
             style={'description_width': 'initial'},
             disabled=False
         )
@@ -488,7 +497,7 @@ class NashQLearningWidgets (GamesNObserver):
         self.decayingEpsilonWidget = widgets.IntText(
             value=self.nashQlearning.decaying_epsilon,
             layout=widgets.Layout(width='50%'),
-            description='Pure epsilon episodes:',
+            description='Pure epsilon steps:',
             style={'description_width': 'initial'},
             disabled=False
         )
@@ -529,15 +538,15 @@ class NashQLearningWidgets (GamesNObserver):
 
         self.epsilonWidget.observe(self.setEpsilon, names='value')
 
-        # episodes widget
-        self.episodesWidget = widgets.IntText(
-            value=self.nashQlearning.episodes,
-            description='Episodes:',
+        # steps widget
+        self.stepsWidget = widgets.IntText(
+            value=self.nashQlearning.steps,
+            description='Steps:',
             disabled=False,
             min=1
         )
 
-        self.episodesWidget.observe(self.setEpisodes, names='value')
+        self.stepsWidget.observe(self.setSteps, names='value')
 
         # goal state widget
         self.goalStateWidget = widgets.Dropdown(
@@ -585,7 +594,7 @@ class NashQLearningWidgets (GamesNObserver):
             grid_template_rows='repeat(7, 1fr)',
             grid_gap='10px'
         ))
-        self.grid.children = [self.episodesWidget, self.gammaWidget, self.epsilonWidget,
+        self.grid.children = [self.stepsWidget, self.gammaWidget, self.epsilonWidget,
                               self.decayingEpsilonWidget, self.alfaWidget, self.pureTrainingEpWidget,
                               self.text, self.resetWidget, self.startingStateWidget, self.goalStateWidget,
                               self.startButton, self.gamesLoadingBarNashQ, self.endLabel]
@@ -595,8 +604,8 @@ class NashQLearningWidgets (GamesNObserver):
     def notifyEnd(self):
         self.endLabel.value = "Training completed"
 
-    # start the NashQ learning algorithm on button click
     def start(self, b):
+        """starts the learning process"""
         self.endLabel.value = ""
         if (self.verifyIfSWellSet()):
             self.nashQlearning.startLearning()
@@ -637,11 +646,12 @@ class NashQLearningWidgets (GamesNObserver):
         self.startingStateWidget.options = [
             (str(i), i) for i in range(len(self.nashQlearning.env.getGames()))]
 
-    def setEpisodes(self, episodes):
-        self.nashQlearning.episodes = episodes["new"]
-        self.gamesLoadingBarNashQ.max = self.nashQlearning.episodes-1
+    def setSteps(self, steps):
+        self.nashQlearning.steps = steps["new"]
+        self.gamesLoadingBarNashQ.max = self.nashQlearning.steps-1
 
     def verifyIfSWellSet(self):
+        """verifies if the environment is well set for the learning process, if not it displays an error message and returns False, otherwise it returns True"""
         self.endLabel.value = "verifying the env"
         if self.nashQlearning.env.getGames().shape[0] == 0:
             self.endLabel.value = "No games set"
