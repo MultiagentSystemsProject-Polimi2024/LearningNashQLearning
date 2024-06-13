@@ -5,7 +5,6 @@ LearningNashQLearning/__init__.py
 LearningNashQLearning.egg-info/PKG-INFO
 LearningNashQLearning.egg-info/SOURCES.txt
 LearningNashQLearning.egg-info/dependency_links.txt
-LearningNashQLearning.egg-info/requires.txt
 LearningNashQLearning.egg-info/top_level.txt
 LearningNashQLearning/Model/Agent.py
 LearningNashQLearning/Model/Environment.py
