@@ -459,3 +459,7 @@ class FinalDisplay(NashQLearningObserver):
 
     def get_widget(self):
         return self.box
+
+    def get_graph_widget(self):
+        return self.graphFig.canvas
+    

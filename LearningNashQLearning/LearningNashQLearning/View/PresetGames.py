@@ -485,7 +485,8 @@ class PresetGames:
         games[5].setTransition((0, 1), 11, 1)
         games[5].setPayoff((0, 1), np.array([0,5]))
         ############Negative Payoff Transitions###############
-        
+        games[5].setTransition((1, 1), 5, 1)
+        games[5].setPayoff((1, 1), np.array([-2,-2]))
         ############Non Valuable Transitions###############
         games[5].setTransition((2, 0), 5, 1)
         games[5].setPayoff((2, 0), np.array([-1,5]))
