@@ -331,9 +331,6 @@ class PayoffWidget(GameObserver):
     def updateTitle(self):
         self.title.value = "<h2>Payoffs - "+str(self.actionProfile)+"</h2>"
 
-    def getWidget(self):
-        return self.widget
-
 
 class GameEditor:
     nPlayers = 1
