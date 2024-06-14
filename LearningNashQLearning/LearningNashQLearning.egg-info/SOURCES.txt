@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 setup.py
 LearningNashQLearning/__init__.py

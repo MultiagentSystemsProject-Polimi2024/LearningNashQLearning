@@ -1,14 +1,3 @@
-Metadata-Version: 2.1
-Name: LearningNashQLearning
-Version: 0.12
-Summary: A simple NashQ-learning implementation in Python
-Author: Paolo Ginefra, Federico Rocca, Andrea Tarabotto
-Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
-Requires-Python: >=3.9
-Description-Content-Type: text/markdown
-
 # LearningNashQLearning
 
 This is an educational project to see the inner workings of the Nash-Q Learning algorithm. The Nash-Q Learning algorithm is a multi-agent reinforcement learning algorithm that is designed to learn Nash equilibria in general-sum stochastic games. This project is designed to be educational and is not intended to be used in production environments.
