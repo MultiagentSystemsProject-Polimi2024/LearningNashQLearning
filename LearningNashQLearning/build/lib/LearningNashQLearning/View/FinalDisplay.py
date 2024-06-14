@@ -134,6 +134,9 @@ class FinalDisplay(NashQLearningObserver):
             style={'description_width': 'initial'},
         )
 
+        self.displayGridToggle.observe(
+            lambda x: self.__plot_graph(), names='value')
+
         self.graphLabelsOptions = widgets.Dropdown(
             options=self.labelOptions.keys(),
             value='NashQTable',
@@ -343,7 +346,7 @@ class FinalDisplay(NashQLearningObserver):
     def __plot_graph(self):
         current_state = self.history.get(self.gameNum).get('current_state')
 
-        if (self.displayGridToggle.value):
+        if (self.displayGridToggle.value and self.env.NPlayers == 2 and self.env.getNGames() <= 16):
             current_action_profile = self.history.get(
                 self.gameNum).get('action_profile')
             self.gridDisplay.plotState(current_state, current_action_profile)
@@ -414,7 +417,7 @@ class FinalDisplay(NashQLearningObserver):
 
             # Generate a grid of all possible action indices for each player
             grids = np.meshgrid(*[np.arange(len(player_probs))
-                                for player_probs in policy], indexing='ij')
+                                  for player_probs in policy], indexing='ij')
 
             # Initialize the joint probability array with ones
             joint_prob_shape = [len(player_probs) for player_probs in policy]
