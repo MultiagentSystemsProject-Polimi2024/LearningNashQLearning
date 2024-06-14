@@ -6,6 +6,7 @@ from .GraphClass import GraphClass
 from ..Model.NashQLearning import NashQLearning, NashQLearningObserver
 from ..Model.Environment import Environment, Game
 from ..Model.History import History
+from .GridDisplay import GridDisplay
 
 
 class FinalDisplay(NashQLearningObserver):
@@ -125,6 +126,14 @@ class FinalDisplay(NashQLearningObserver):
             'NashQPolicy': self.__setLabelsToPolicy
         }
 
+        self.displayGridToggle = widgets.Checkbox(
+            value=False,
+            description='Display Grid',
+            disabled=False,
+            indent=False,
+            style={'description_width': 'initial'},
+        )
+
         self.graphLabelsOptions = widgets.Dropdown(
             options=self.labelOptions.keys(),
             value='NashQTable',
@@ -175,8 +184,9 @@ class FinalDisplay(NashQLearningObserver):
 
         # Create the VBox containing all the widgets
         self.box = widgets.VBox(
-            [self.title, self.subTitle1,  self.window_slider, self.plotFig.canvas, self.sliderBox, self.graphSettings, self.graphFig.canvas, self.currentGame, self.actionProfileBox, self.payoffBox, self.currentPolicyBox, self.qTableBox])
+            [self.title, self.subTitle1,  self.window_slider, self.plotFig.canvas, self.sliderBox, self.graphSettings, self.displayGridToggle, self.graphFig.canvas, self.currentGame, self.actionProfileBox, self.payoffBox, self.currentPolicyBox, self.qTableBox])
 
+        self.gridDisplay = GridDisplay(self.graphAx, self.graphFig)
         nashQ.attach(self)
 
     def next(self):
@@ -332,13 +342,20 @@ class FinalDisplay(NashQLearningObserver):
 
     def __plot_graph(self):
         current_state = self.history.get(self.gameNum).get('current_state')
-        self.graph.current_state_set(current_state)
 
-        if self.gameNum < len(self.history.getHistory()) - 1:
-            next_state = self.history.get(self.gameNum+1).get('current_state')
-            self.graph.setCurrentActionProfile(current_state, next_state)
+        if (self.displayGridToggle.value):
+            current_action_profile = self.history.get(
+                self.gameNum).get('action_profile')
+            self.gridDisplay.plotState(current_state, current_action_profile)
+        else:
+            self.graph.current_state_set(current_state)
 
-        self.graph.plotGraph(self.graphAx, self.graphFig)
+            if self.gameNum < len(self.history.getHistory()) - 1:
+                next_state = self.history.get(
+                    self.gameNum+1).get('current_state')
+                self.graph.setCurrentActionProfile(current_state, next_state)
+
+            self.graph.plotGraph(self.graphAx, self.graphFig)
 
     def __getQTables(self):
         qTables = []
@@ -462,4 +479,3 @@ class FinalDisplay(NashQLearningObserver):
 
     def get_graph_widget(self):
         return self.graphFig.canvas
-    

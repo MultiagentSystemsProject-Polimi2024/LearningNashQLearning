@@ -1,4 +1,3 @@
-README.md
 pyproject.toml
 setup.py
 LearningNashQLearning/__init__.py
@@ -16,5 +15,6 @@ LearningNashQLearning/View/EnvGraphDisplay.py
 LearningNashQLearning/View/FinalDisplay.py
 LearningNashQLearning/View/GameEditor.py
 LearningNashQLearning/View/GraphClass.py
+LearningNashQLearning/View/GridDisplay.py
 LearningNashQLearning/View/PresetGames.py
 LearningNashQLearning/View/__init__.py

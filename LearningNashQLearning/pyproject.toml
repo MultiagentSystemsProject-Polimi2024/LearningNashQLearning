@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LearningNashQLearning"
-version = "0.9"
+version = "0.10"
 description = "A simple NashQ-learning implementation in Python"
-readme = "README.md"
+readme = "./README.md"
 authors = [{ name = "Paolo Ginefra" }, { name = "Federico Rocca"}, { name = "Andrea Tarabotto" }]
 requires-python = ">=3.9"
 classifiers = [ 
