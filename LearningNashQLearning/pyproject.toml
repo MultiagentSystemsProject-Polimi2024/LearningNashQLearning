@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LearningNashQLearning"
-version = "0.7"
+version = "0.8"
 description = "A simple NashQ-learning implementation in Python"
 readme = "README.md"
 authors = [{ name = "Paolo Ginefra" }, { name = "Federico Rocca"}, { name = "Andrea Tarabotto" }]

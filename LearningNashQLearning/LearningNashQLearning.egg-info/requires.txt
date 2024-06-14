@@ -1,0 +1,9 @@
+numpy
+matplotlib
+seaborn
+networkx
+pygambit
+netgraph
+ipywidgets
+notebook
+ipympl

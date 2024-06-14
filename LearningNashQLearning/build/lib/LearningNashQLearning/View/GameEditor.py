@@ -1,6 +1,7 @@
 import ipywidgets as widgets
 import numpy as np
 from ..Model.Environment import GameObserver, TransitionProfile, EnvironmentObserver
+from IPython.display import clear_output, display
 
 
 class ActionDomainsWidgets(GameObserver):
@@ -417,6 +418,19 @@ class EnvironmentWidget(EnvironmentObserver):
             self.box
         ])
 
+        self.gameSelector = widgets.Dropdown(
+            options=[i for i in range(len(self.widgets))],
+            value= 0,
+            description='Game:'
+        )
+
+        self.gameSelector.observe(lambda change: self.changeGameShowing(change.new), names='value')
+
+        self.gameOutput = self.widgets[0].getWidget()
+
+        self.secondWidget = widgets.VBox([self.gameSelector, self.gameOutput])
+        self.outputWidget = widgets.Output()
+
     def getWidget(self):
         return self.widget
 
@@ -437,4 +451,27 @@ class EnvironmentWidget(EnvironmentObserver):
         self.box.children = [w.getWidget() for w in self.widgets]
         self.box.titles = ["Game " + str(i) for i in range(len(self.widgets))]
 
+        self.gameSelector.options = [i for i in range(len(self.widgets))]
+
         self.globalActionDomainWidget.setGames(games)
+
+        self.displayGameSelector()
+
+    def changeGameShowing(self, gameIndex):
+        self.gameOutput = self.widgets[gameIndex].getWidget()
+        self.secondWidget.children = [self.gameSelector, self.gameOutput]
+        self.displayGameSelector()
+
+    def getColabWidget(self):
+        return widgets.VBox([
+            self.NPlayerWidget,
+            self.NGamesWidget,
+            self.globalActionDomainWidget.getWidget()])
+    
+    def displayGameSelector(self):
+        with self.outputWidget:
+            clear_output(wait = True)
+            display(self.secondWidget)
+    
+    def getGameSelector(self):
+        return self.outputWidget
